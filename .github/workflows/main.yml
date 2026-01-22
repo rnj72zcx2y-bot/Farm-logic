@@ -1,10 +1,9 @@
-name: Generate Daily Puzzles (UTC, +30)
-
 on:
   schedule:
     - cron: "10 0 * * *"  # 00:10 UTC
   workflow_dispatch:
-  permissions:
+
+permissions:
   contents: write
 
 jobs:
