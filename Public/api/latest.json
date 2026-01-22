@@ -1,0 +1,8 @@
+{
+  "generatedAtUtc": "1970-01-01T00:00:00Z",
+  "availableThroughUtc": "1970-01-01",
+  "daysAhead": 30,
+  "schemaVersion": 1,
+  "generatorVersion": "1.0.0",
+  "gitCommit": "dev"
+}
