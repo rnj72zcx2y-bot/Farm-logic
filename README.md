@@ -111,7 +111,6 @@ Path:
 ### 2) GitHub Actions permissions (required for pushing)
 In your workflow file (`.github/workflows/main.yml`) ensure:
 
-```yaml
 permissions:
   contents: write
 
