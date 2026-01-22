@@ -1,0 +1,151 @@
+{
+  "dateUtc": "2026-02-19",
+  "difficulties": {
+    "easy": {
+      "difficultyScore": {
+        "components": {
+          "btPerCard": 41.67,
+          "maxDepth": 10,
+          "mu": 0.85,
+          "nvPerCard": 166.67,
+          "raw": 1.5639,
+          "sigma": 0.25,
+          "tPerCardMs": 0.0
+        },
+        "hardness01": 0.9456,
+        "passedBand": true,
+        "targetBand": [
+          0.2,
+          0.4
+        ]
+      },
+      "grid": {
+        "activeCells": 0,
+        "cards": 6,
+        "cols": 4,
+        "rows": 4
+      },
+      "hash": {
+        "puzzleJson": "sha256:a86838318e92d52f1dc36ce4f286230a63fcd22d5ed4eb75795e347924059964"
+      },
+      "seed": "sha256:642ce163f3067df7121fee0811f26ea2e57de0bb09a88dd6e4493ef57d3e76df",
+      "solver": {
+        "stats": {
+          "backtracks": 250,
+          "maxDepth": 10,
+          "nodesVisited": 1000,
+          "solutionsFound": 1,
+          "timeMs": 0
+        },
+        "stopAt": 2,
+        "type": "CSP-backtracking"
+      },
+      "uniqueSolution": true
+    },
+    "hard": {
+      "difficultyScore": {
+        "components": {
+          "btPerCard": 10.42,
+          "maxDepth": 10,
+          "mu": 0.85,
+          "nvPerCard": 41.67,
+          "raw": 1.0707,
+          "sigma": 0.25,
+          "tPerCardMs": 0.0
+        },
+        "hardness01": 0.7074,
+        "passedBand": true,
+        "targetBand": [
+          0.7,
+          0.9
+        ]
+      },
+      "grid": {
+        "activeCells": 0,
+        "cards": 24,
+        "cols": 8,
+        "rows": 8
+      },
+      "hash": {
+        "puzzleJson": "sha256:e01f75677a1fb11b32e433f4a1d33c27d4b11a110ddcffab12b53a5ebed83bce"
+      },
+      "seed": "sha256:9f8b2b8856856fbdf56715b3cb96f2713128d269b8879e0fd2f3068194871b53",
+      "solver": {
+        "stats": {
+          "backtracks": 250,
+          "maxDepth": 10,
+          "nodesVisited": 1000,
+          "solutionsFound": 1,
+          "timeMs": 0
+        },
+        "stopAt": 2,
+        "type": "CSP-backtracking"
+      },
+      "uniqueSolution": true
+    },
+    "medium": {
+      "difficultyScore": {
+        "components": {
+          "btPerCard": 16.67,
+          "maxDepth": 10,
+          "mu": 0.85,
+          "nvPerCard": 66.67,
+          "raw": 1.235,
+          "sigma": 0.25,
+          "tPerCardMs": 0.0
+        },
+        "hardness01": 0.8235,
+        "passedBand": true,
+        "targetBand": [
+          0.45,
+          0.65
+        ]
+      },
+      "grid": {
+        "activeCells": 0,
+        "cards": 15,
+        "cols": 6,
+        "rows": 6
+      },
+      "hash": {
+        "puzzleJson": "sha256:5c95ebab4638282ade3ccb4a6cc535aea4201b1f1da52ee5b87ce956d1349dd6"
+      },
+      "seed": "sha256:41d496620ca74d9b3aab071fdcd9f70a579736dc46a38b5d763954ca9c4cfff0",
+      "solver": {
+        "stats": {
+          "backtracks": 250,
+          "maxDepth": 10,
+          "nodesVisited": 1000,
+          "solutionsFound": 1,
+          "timeMs": 0
+        },
+        "stopAt": 2,
+        "type": "CSP-backtracking"
+      },
+      "uniqueSolution": true
+    }
+  },
+  "generatedAtUtc": "2026-01-22T20:05:50Z",
+  "generatorVersion": "1.0.0",
+  "gitCommit": "d476b40",
+  "notes": {
+    "animals": [
+      "Chicken",
+      "Cow",
+      "Horse",
+      "Dog",
+      "Cat",
+      "Bee",
+      "Spider",
+      "Snail"
+    ],
+    "counting": "rules evaluate per CELL; cards may cross regions",
+    "emptyAllowed": true,
+    "fenceColor": "white/brown/black only (hint-only; not used in rules)",
+    "ui": {
+      "checkEnabledOnlyWhenAllCardsPlaced": true,
+      "snapToValid": true
+    }
+  },
+  "schemaVersion": 1
+}

@@ -1,0 +1,12 @@
+{
+  "dateUtc": "2026-01-22",
+  "generatorVersion": "1.0.0",
+  "gitCommit": "d476b40",
+  "paths": {
+    "easy": "/api/daily/2026-01-22/easy.json",
+    "hard": "/api/daily/2026-01-22/hard.json",
+    "medium": "/api/daily/2026-01-22/medium.json",
+    "meta": "/api/daily/2026-01-22/meta.json"
+  },
+  "schemaVersion": 1
+}

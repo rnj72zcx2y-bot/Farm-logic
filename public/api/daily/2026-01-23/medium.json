@@ -1,0 +1,14 @@
+{
+  "cards": [],
+  "dateUtc": "2026-01-23",
+  "difficulty": "medium",
+  "generatorVersion": "1.0.0",
+  "grid": {
+    "activeCellsCoords": [],
+    "blocked": [],
+    "cols": 6,
+    "rows": 6
+  },
+  "regions": [],
+  "schemaVersion": 1
+}
