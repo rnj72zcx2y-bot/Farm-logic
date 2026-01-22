@@ -146,3 +146,56 @@ Rule object types (V1)
     • { "type":"uniqueSpecies" }  (empty ignored)
 • Only one species:
     • { "type":"onlySpecies", "species":"Cow" } (empty not allowed)
+Current Status (Important)
+✅ GitHub Actions pipeline is working (green).
+⚠️ Generator and solver are still templates until implemented.
+TEMP mode currently used
+• Hardness gating is temporarily disabled so the pipeline can run end-to-end.
+• Once the real CSP solver is implemented, re-enable hardness gating.
+
+---
+
+Next Implementation Steps (Roadmap)
+Phase 1 — Real Generator
+Implement generate_candidate() in generator/generate_one_day.py:
+• Generate connected, domino-tileable shapes with fixed active cell counts
+• Partition regions (4 / 10 / 16)
+• Generate card sets with animals + empty + fences
+• Assign region rules (structured rule objects)
+Phase 2 — CSP Solver (Stop-at-2)
+Implement solve_count() in generator/solver_unique.py:
+• Backtracking CSP solver
+• Incremental region trackers:
+    • sum legs, animal count, species bitmask, remaining cells
+• Stop at 2 solutions
+• Emit solver stats for hardness scoring
+Phase 3 — Re-enable Hardness Gate
+Use target bands:
+• Easy: 0.20–0.40
+• Medium: 0.45–0.65
+• Hard: 0.70–0.90
+
+---
+
+Troubleshooting
+403 push denied (github-actions[bot])
+• Workflow permissions must be Read & write
+• Workflow must include:
+• permissions:
+  contents: write
+
+“Invalid workflow file”
+• YAML indentation must use spaces only
+• permissions: must be at root level (same indentation as on: and jobs:)
+requirements.txt not found
+• File must be exactly at: generator/requirements.txt
+
+---
+
+License
+Choose a license that matches your intended distribution (MIT is common for templates).
+
+---
+
+## Want me to commit it for you (next best step)?
+If you tell me **the exact repo name** (just the name, not a URL) and whether your README should be **German or English**, I can tailor the README text (tone, naming, and details) to match your project and UI language preference.
