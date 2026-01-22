@@ -36,7 +36,7 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
         "grid": {
             "rows": spec.rows,
             "cols": spec.cols,
-            "activeCellsCoords": [],
+            "activeCellsCoords": [],  # TODO: fill with [[r,c], ...]
             "blocked": []
         },
         "regions": [],
@@ -46,28 +46,32 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
 
 
 def generate_unique(date_utc: str, difficulty: str, max_attempts: int = 300) -> Dict[str, Any]:
-"""Generate a puzzle that is uniquely solvable.
-TEMP: hardness gating disabled until real generator + CSP solver are implemented.
-"""
-spec = SPECS[difficulty]
-for attempt in range(max_attempts):  
-    puzzle = generate_candidate(date_utc, difficulty, attempt)  
+    """Generate a puzzle that is uniquely solvable.
 
-    # Uniqueness check  
-    solutions, stats = solve_count(puzzle, stop_at=2)  
-    if solutions != 1:  
-        continue  
+    TEMP: Hardness gating disabled until real generator + CSP solver are implemented.
+    """
+    spec = SPECS[difficulty]
 
-    # TEMP: Disable hardness gating until real generator + CSP solver are implemented  
-    score = compute_hardness(difficulty, spec.cards, stats)  
-    score["passedBand"] = True  
+    for attempt in range(max_attempts):
+        puzzle = generate_candidate(date_utc, difficulty, attempt)
 
-    puzzle["_internal"]["uniqueSolution"] = True  
-    puzzle["_internal"]["solverStats"] = stats  
-    puzzle["_internal"]["difficultyScore"] = score  
-    return puzzle  
+        # Uniqueness check
+        solutions, stats = solve_count(puzzle, stop_at=2)
+        if solutions != 1:
+            continue
 
-raise RuntimeError(f"Could not generate acceptable puzzle for {date_utc} {difficulty}")  
+        # TEMP: disable hardness gating for now
+        score = compute_hardness(difficulty, spec.cards, stats)
+        score["passedBand"] = True
+
+        puzzle["_internal"]["uniqueSolution"] = True
+        puzzle["_internal"]["solverStats"] = stats
+        puzzle["_internal"]["difficultyScore"] = score
+        return puzzle
+
+    raise RuntimeError(f"Could not generate acceptable puzzle for {date_utc} {difficulty}")
+
+
 def build_meta(date_utc: str, puzzles_by_diff: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
     meta = {
         "dateUtc": date_utc,
@@ -77,7 +81,7 @@ def build_meta(date_utc: str, puzzles_by_diff: Dict[str, Dict[str, Any]]) -> Dic
         "generatedAtUtc": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
         "notes": {
             "fenceColor": "white/brown/black only (hint-only; not used in rules)",
-            "animals": ["Chicken","Cow","Horse","Dog","Cat","Bee","Spider","Snail"],
+            "animals": ["Chicken", "Cow", "Horse", "Dog", "Cat", "Bee", "Spider", "Snail"],
             "emptyAllowed": True,
             "counting": "rules evaluate per CELL; cards may cross regions",
             "ui": {
