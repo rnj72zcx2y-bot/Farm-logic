@@ -14,28 +14,23 @@ def _domino_tileable(active_cells: List[List[int]]) -> Tuple[bool, int]:
     if n % 2 == 1:
         return False, 0
 
-    cell_to_idx = {cell: i for i, cell in enumerate(cells)}
-
     # Bipartition by chessboard parity
-    U, V = [], []
-    for (r, c), idx in cell_to_idx.items():
-        (U if (r + c) % 2 == 0 else V).append(idx)
-
+    U = [cell for cell in cells if (cell[0] + cell[1]) % 2 == 0]
+    V = [cell for cell in cells if (cell[0] + cell[1]) % 2 == 1]
     if len(U) != len(V):
         return False, 0
+
+    active_set = set(cells)
 
     G = nx.Graph()
     G.add_nodes_from(U, bipartite=0)
     G.add_nodes_from(V, bipartite=1)
 
-    for (r, c), u in cell_to_idx.items():
-        if u not in U:
-            continue
+    for (r, c) in U:
         for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
             nb = (r + dr, c + dc)
-            if nb in cell_to_idx:
-                v = cell_to_idx[nb]
-                G.add_edge(u, v)
+            if nb in active_set:
+                G.add_edge((r, c), nb)
 
     matching = nx.algorithms.bipartite.maximum_matching(G, top_nodes=U)
     matched = sum(1 for u in U if u in matching)
@@ -45,8 +40,7 @@ def _domino_tileable(active_cells: List[List[int]]) -> Tuple[bool, int]:
 def solve_count(puzzle: Dict[str, Any], stop_at: int = 2) -> Tuple[int, Dict[str, Any]]:
     """Stage-1 solver: feasibility only.
 
-    This implementation is meant to keep the pipeline running while the real CSP solver
-    (Stop-at-2 with full region rules) is implemented.
+    This keeps the pipeline running while the real CSP solver (stage-2) is implemented.
 
     Returns:
       solutionsFound: 0 if not tileable, 1 if tileable (NOT uniqueness yet)
@@ -54,8 +48,7 @@ def solve_count(puzzle: Dict[str, Any], stop_at: int = 2) -> Tuple[int, Dict[str
     """
     t0 = time.time()
 
-    grid = puzzle.get("grid", {})
-    active = grid.get("activeCellsCoords", [])
+    active = puzzle.get("grid", {}).get("activeCellsCoords", [])
 
     if not active:
         stats = {
