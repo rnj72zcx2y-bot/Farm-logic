@@ -17,32 +17,87 @@ def build_seed(date_utc: str, difficulty: str) -> str:
     return sha256_hex(seed_input)
 
 
+def generate_candidatefrom typing import Dict, Any
+
 def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str, Any]:
-    """Generate a single candidate puzzle.
-
-    TEMPLATE ONLY — replace with your real generator.
-    Output MUST contain structured rules in the puzzle JSON.
-
-    NOTE: The solver expects grid.activeCellsCoords as list of [r,c].
+    """
+    TEMP generator: creates a simple connected, domino-tileable active shape 
+    so the solver can be developed and tested. 
+    Replace later with real shape/regions/cards/rules generator.
     """
     spec = SPECS[difficulty]
     seed = build_seed(date_utc, difficulty)
+    rows, cols = spec.rows, spec.cols
+    
+    # Simple deterministic shapes (domino-tileable)
+    active = []
+    
+    if difficulty == "easy":
+        # 4x4 minus last column => 12 cells
+        for r in range(rows):
+            for c in range(cols - 1):
+                active.append([r, c])
+                
+    elif difficulty == "medium":
+        # 6x6 minus last row => 30 cells
+        for r in range(rows - 1):
+            for c in range(cols):
+                active.append([r, c])
+                
+    else:
+        # 8x8 minus last two rows => 48 cells
+        for r in range(rows - 2):
+            for c in range(cols):
+                active.append([r, c])
 
+    # Blockers = everything else
+    active_set = {tuple(x) for x in active}
+    blocked = []
+    blocker_types = ["tree", "house", "tractor"]
+    k = 0
+    
+    for r in range(rows):
+        for c in range(cols):
+            if (r, c) not in active_set:
+                blocked.append({
+                    "cell": [r, c], 
+                    "type": blocker_types[k % 3]
+                })
+                k += 1
+
+    # TEMP cards: correct count, neutral content (null/null)
+    # Fence is hint-only but we still fill it.
+    fences = ["white", "brown", "black"]
+    cards = []
+    
+    for i in range(spec.cards):
+        cards.append({
+            "id": f"C{i+1:02d}",
+            "fence": fences[(i + attempt) % 3],
+            "a": None,
+            "b": None
+        })
+
+    # TEMP regions/rules: empty for now (solver stage 1)
     return {
         "dateUtc": date_utc,
         "difficulty": difficulty,
         "schemaVersion": 1,
         "generatorVersion": GENERATOR_VERSION,
         "grid": {
-            "rows": spec.rows,
-            "cols": spec.cols,
-            "activeCellsCoords": [],  # TODO: fill with [[r,c], ...]
-            "blocked": []
+            "rows": rows,
+            "cols": cols,
+            "activeCellsCoords": active,
+            "blocked": blocked
         },
         "regions": [],
-        "cards": [],
-        "_internal": {"seed": "sha256:" + seed, "attempt": attempt}
+        "cards": cards,
+        "_internal": {
+            "seed": "sha256:" + seed, 
+            "attempt": attempt
+        }
     }
+
 
 
 def generate_unique(date_utc: str, difficulty: str, max_attempts: int = 300) -> Dict[str, Any]:
