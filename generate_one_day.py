@@ -46,28 +46,28 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
 
 
 def generate_unique(date_utc: str, difficulty: str, max_attempts: int = 300) -> Dict[str, Any]:
-    spec = SPECS[difficulty]
+"""Generate a puzzle that is uniquely solvable.
+TEMP: hardness gating disabled until real generator + CSP solver are implemented.
+"""
+spec = SPECS[difficulty]
+for attempt in range(max_attempts):  
+    puzzle = generate_candidate(date_utc, difficulty, attempt)  
 
-    for attempt in range(max_attempts):
-        puzzle = generate_candidate(date_utc, difficulty, attempt)
+    # Uniqueness check  
+    solutions, stats = solve_count(puzzle, stop_at=2)  
+    if solutions != 1:  
+        continue  
 
-        solutions, stats = solve_count(puzzle, stop_at=2)
-        if solutions != 1:
-            continue
+    # TEMP: Disable hardness gating until real generator + CSP solver are implemented  
+    score = compute_hardness(difficulty, spec.cards, stats)  
+    score["passedBand"] = True  
 
-        # TEMP: disable hardness gating until real solver+generator are implemented
-score = compute_hardness(difficulty, spec.cards, stats)
-score["passedBand"] = True
-            continue
+    puzzle["_internal"]["uniqueSolution"] = True  
+    puzzle["_internal"]["solverStats"] = stats  
+    puzzle["_internal"]["difficultyScore"] = score  
+    return puzzle  
 
-        puzzle["_internal"]["uniqueSolution"] = True
-        puzzle["_internal"]["solverStats"] = stats
-        puzzle["_internal"]["difficultyScore"] = score
-        return puzzle
-
-    raise RuntimeError(f"Could not generate acceptable puzzle for {date_utc} {difficulty}")
-
-
+raise RuntimeError(f"Could not generate acceptable puzzle for {date_utc} {difficulty}")  
 def build_meta(date_utc: str, puzzles_by_diff: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
     meta = {
         "dateUtc": date_utc,
