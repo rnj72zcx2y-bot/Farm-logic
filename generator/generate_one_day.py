@@ -17,7 +17,6 @@ def build_seed(date_utc: str, difficulty: str) -> str:
     return sha256_hex(seed_input)
 
 
-def generate_candidatefrom typing import Dict, Any
 
 def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str, Any]:
     """
