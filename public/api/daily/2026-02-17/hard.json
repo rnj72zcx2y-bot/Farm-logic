@@ -1,134 +1,134 @@
 {
   "cards": [
     {
-      "a": null,
-      "b": null,
-      "fence": "white",
+      "a": "Snail",
+      "b": "Snail",
+      "fence": "brown",
       "id": "C01"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "brown",
+      "a": "Snail",
+      "b": "Dog",
+      "fence": "black",
       "id": "C02"
     },
     {
-      "a": null,
-      "b": null,
+      "a": "Cow",
+      "b": "Dog",
       "fence": "black",
       "id": "C03"
     },
     {
-      "a": null,
-      "b": null,
+      "a": "Chicken",
+      "b": "Snail",
       "fence": "white",
       "id": "C04"
     },
     {
       "a": null,
-      "b": null,
-      "fence": "brown",
+      "b": "Chicken",
+      "fence": "black",
       "id": "C05"
     },
     {
       "a": null,
-      "b": null,
+      "b": "Cat",
       "fence": "black",
       "id": "C06"
     },
     {
       "a": null,
-      "b": null,
-      "fence": "white",
+      "b": "Dog",
+      "fence": "brown",
       "id": "C07"
     },
     {
       "a": null,
-      "b": null,
-      "fence": "brown",
+      "b": "Snail",
+      "fence": "white",
       "id": "C08"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "black",
+      "a": "Chicken",
+      "b": "Spider",
+      "fence": "brown",
       "id": "C09"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "white",
+      "a": "Cat",
+      "b": "Bee",
+      "fence": "brown",
       "id": "C10"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "brown",
+      "a": "Horse",
+      "b": "Dog",
+      "fence": "white",
       "id": "C11"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "black",
+      "a": "Snail",
+      "b": "Cat",
+      "fence": "brown",
       "id": "C12"
     },
     {
-      "a": null,
-      "b": null,
+      "a": "Chicken",
+      "b": "Snail",
       "fence": "white",
       "id": "C13"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "brown",
+      "a": "Spider",
+      "b": "Cow",
+      "fence": "black",
       "id": "C14"
     },
     {
-      "a": null,
+      "a": "Chicken",
       "b": null,
-      "fence": "black",
+      "fence": "white",
       "id": "C15"
     },
     {
-      "a": null,
+      "a": "Bee",
       "b": null,
-      "fence": "white",
+      "fence": "brown",
       "id": "C16"
     },
     {
-      "a": null,
+      "a": "Cat",
       "b": null,
-      "fence": "brown",
+      "fence": "white",
       "id": "C17"
     },
     {
-      "a": null,
-      "b": null,
+      "a": "Bee",
+      "b": "Bee",
       "fence": "black",
       "id": "C18"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "white",
+      "a": "Dog",
+      "b": "Chicken",
+      "fence": "black",
       "id": "C19"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "brown",
+      "a": "Horse",
+      "b": "Snail",
+      "fence": "black",
       "id": "C20"
     },
     {
-      "a": null,
+      "a": "Horse",
       "b": null,
-      "fence": "black",
+      "fence": "white",
       "id": "C21"
     },
     {
-      "a": null,
-      "b": null,
+      "a": "Cow",
+      "b": "Bee",
       "fence": "white",
       "id": "C22"
     },
@@ -139,9 +139,9 @@
       "id": "C23"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "black",
+      "a": "Dog",
+      "b": "Spider",
+      "fence": "brown",
       "id": "C24"
     }
   ],
@@ -347,51 +347,9 @@
       {
         "cell": [
           6,
-          0
-        ],
-        "type": "tree"
-      },
-      {
-        "cell": [
-          6,
-          1
-        ],
-        "type": "house"
-      },
-      {
-        "cell": [
-          6,
-          2
-        ],
-        "type": "tractor"
-      },
-      {
-        "cell": [
-          6,
-          3
-        ],
-        "type": "tree"
-      },
-      {
-        "cell": [
-          6,
           4
         ],
         "type": "house"
-      },
-      {
-        "cell": [
-          6,
-          5
-        ],
-        "type": "tractor"
-      },
-      {
-        "cell": [
-          6,
-          6
-        ],
-        "type": "tree"
       },
       {
         "cell": [
@@ -403,7 +361,7 @@
       {
         "cell": [
           7,
-          0
+          3
         ],
         "type": "tractor"
       },
@@ -416,6 +374,41 @@
       },
       {
         "cell": [
+          6,
+          0
+        ],
+        "type": "tree"
+      },
+      {
+        "cell": [
+          6,
+          1
+        ],
+        "type": "house"
+      },
+      {
+        "cell": [
+          7,
+          6
+        ],
+        "type": "tractor"
+      },
+      {
+        "cell": [
+          6,
+          6
+        ],
+        "type": "tree"
+      },
+      {
+        "cell": [
+          6,
+          3
+        ],
+        "type": "tree"
+      },
+      {
+        "cell": [
           7,
           2
         ],
@@ -423,17 +416,17 @@
       },
       {
         "cell": [
-          7,
-          3
+          6,
+          5
         ],
         "type": "tractor"
       },
       {
         "cell": [
           7,
-          4
+          0
         ],
-        "type": "tree"
+        "type": "tractor"
       },
       {
         "cell": [
@@ -444,10 +437,17 @@
       },
       {
         "cell": [
-          7,
-          6
+          6,
+          2
         ],
         "type": "tractor"
+      },
+      {
+        "cell": [
+          7,
+          4
+        ],
+        "type": "tree"
       },
       {
         "cell": [
@@ -460,6 +460,351 @@
     "cols": 8,
     "rows": 8
   },
-  "regions": [],
+  "regions": [
+    {
+      "cells": [
+        [
+          2,
+          6
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          7
+        ]
+      ],
+      "id": "R1",
+      "rule": {
+        "op": "<",
+        "type": "legs",
+        "value": 16
+      }
+    },
+    {
+      "cells": [
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ]
+      ],
+      "id": "R2",
+      "rule": {
+        "type": "uniqueSpecies"
+      }
+    },
+    {
+      "cells": [
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ]
+      ],
+      "id": "R3",
+      "rule": {
+        "type": "uniqueSpecies"
+      }
+    },
+    {
+      "cells": [
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          2,
+          7
+        ]
+      ],
+      "id": "R4",
+      "rule": {
+        "op": ">",
+        "type": "legs",
+        "value": 16
+      }
+    },
+    {
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "id": "R5",
+      "rule": {
+        "op": ">",
+        "type": "animals",
+        "value": 0
+      }
+    },
+    {
+      "cells": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "id": "R6",
+      "rule": {
+        "op": "=",
+        "type": "legs",
+        "value": 4
+      }
+    },
+    {
+      "cells": [
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "id": "R7",
+      "rule": {
+        "op": "=",
+        "type": "animals",
+        "value": 2
+      }
+    },
+    {
+      "cells": [
+        [
+          5,
+          0
+        ]
+      ],
+      "id": "R8",
+      "rule": {
+        "op": "<",
+        "type": "legs",
+        "value": 2
+      }
+    },
+    {
+      "cells": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "id": "R9",
+      "rule": {
+        "type": "uniqueSpecies"
+      }
+    },
+    {
+      "cells": [
+        [
+          4,
+          7
+        ],
+        [
+          5,
+          7
+        ]
+      ],
+      "id": "R10",
+      "rule": {
+        "op": "=",
+        "type": "legs",
+        "value": 8
+      }
+    },
+    {
+      "cells": [
+        [
+          0,
+          4
+        ]
+      ],
+      "id": "R11",
+      "rule": {
+        "op": "=",
+        "type": "legs",
+        "value": 0
+      }
+    },
+    {
+      "cells": [
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          6
+        ]
+      ],
+      "id": "R12",
+      "rule": {
+        "type": "uniqueSpecies"
+      }
+    },
+    {
+      "cells": [
+        [
+          5,
+          1
+        ]
+      ],
+      "id": "R13",
+      "rule": {
+        "op": "=",
+        "type": "animals",
+        "value": 0
+      }
+    },
+    {
+      "cells": [
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ]
+      ],
+      "id": "R14",
+      "rule": {
+        "op": ">",
+        "type": "legs",
+        "value": 14
+      }
+    },
+    {
+      "cells": [
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ]
+      ],
+      "id": "R15",
+      "rule": {
+        "op": ">",
+        "type": "legs",
+        "value": 18
+      }
+    },
+    {
+      "cells": [
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ]
+      ],
+      "id": "R16",
+      "rule": {
+        "op": "=",
+        "type": "legs",
+        "value": 10
+      }
+    }
+  ],
   "schemaVersion": 1
 }

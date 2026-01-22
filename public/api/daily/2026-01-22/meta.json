@@ -26,7 +26,7 @@
         "rows": 4
       },
       "hash": {
-        "puzzleJson": "sha256:cf0d9771b4bd7d9cf0f4b465b73e2a582584fb522c3768f8cc87b8c2c53a7b40"
+        "puzzleJson": "sha256:2ba90e0e53d40e2669b8cc0e4908baf01b0a5126c455d4a18086b7752142778f"
       },
       "seed": "sha256:2329f264167fe07925552e30dc3ef56badd5efe3d03b5fb6105ea8a013e92e4c",
       "solver": {
@@ -67,7 +67,7 @@
         "rows": 8
       },
       "hash": {
-        "puzzleJson": "sha256:16ae9cfbc336f1da35001a7b91e1d58b49e13c6f55ef6f02b9089c826a5d919b"
+        "puzzleJson": "sha256:93e0f885eb87099828469356f36945bcaa53d06251118832bb4679955a4f0a5c"
       },
       "seed": "sha256:f410a892d4b00ef633cce7445be23f2dbcd2e0f6a43cd52a63924e2e119a4aa7",
       "solver": {
@@ -108,7 +108,7 @@
         "rows": 6
       },
       "hash": {
-        "puzzleJson": "sha256:41141c764b91ae1495457b918903b873efb4ba58fd37daa404b52dc5908929c6"
+        "puzzleJson": "sha256:68b25e503157ef42ee0bfdc2b66796e71898604934b87b8bcd583e809d762a97"
       },
       "seed": "sha256:f6665d1fac84947c2779ef1bd45a4d077386b826cf3cc1a21b895bf41bfa8917",
       "solver": {
@@ -125,9 +125,9 @@
       "uniqueSolution": true
     }
   },
-  "generatedAtUtc": "2026-01-22T23:24:44Z",
+  "generatedAtUtc": "2026-01-22T23:37:56Z",
   "generatorVersion": "1.0.0",
-  "gitCommit": "963f798",
+  "gitCommit": "763cc48",
   "notes": {
     "animals": [
       "Chicken",

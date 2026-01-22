@@ -1,39 +1,39 @@
 {
   "cards": [
     {
-      "a": null,
-      "b": null,
-      "fence": "white",
+      "a": "Cow",
+      "b": "Bee",
+      "fence": "black",
       "id": "C01"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "brown",
+      "a": "Cow",
+      "b": "Cat",
+      "fence": "black",
       "id": "C02"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "black",
+      "a": "Chicken",
+      "b": "Cat",
+      "fence": "white",
       "id": "C03"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "white",
+      "a": "Chicken",
+      "b": "Dog",
+      "fence": "brown",
       "id": "C04"
     },
     {
-      "a": null,
-      "b": null,
+      "a": "Dog",
+      "b": "Bee",
       "fence": "brown",
       "id": "C05"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "black",
+      "a": "Snail",
+      "b": "Horse",
+      "fence": "white",
       "id": "C06"
     }
   ],
@@ -101,13 +101,6 @@
       },
       {
         "cell": [
-          1,
-          3
-        ],
-        "type": "house"
-      },
-      {
-        "cell": [
           2,
           3
         ],
@@ -119,11 +112,106 @@
           3
         ],
         "type": "tree"
+      },
+      {
+        "cell": [
+          1,
+          3
+        ],
+        "type": "house"
       }
     ],
     "cols": 4,
     "rows": 4
   },
-  "regions": [],
+  "regions": [
+    {
+      "cells": [
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "id": "R1",
+      "rule": {
+        "op": "=",
+        "type": "legs",
+        "value": 14
+      }
+    },
+    {
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "id": "R2",
+      "rule": {
+        "op": "=",
+        "type": "animals",
+        "value": 3
+      }
+    },
+    {
+      "cells": [
+        [
+          2,
+          0
+        ]
+      ],
+      "id": "R3",
+      "rule": {
+        "species": "Cat",
+        "type": "onlySpecies"
+      }
+    },
+    {
+      "cells": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "id": "R4",
+      "rule": {
+        "op": "=",
+        "type": "legs",
+        "value": 16
+      }
+    }
+  ],
   "schemaVersion": 1
 }

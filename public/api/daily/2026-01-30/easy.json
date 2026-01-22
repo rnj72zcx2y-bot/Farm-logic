@@ -1,39 +1,39 @@
 {
   "cards": [
     {
-      "a": null,
-      "b": null,
-      "fence": "white",
+      "a": "Cat",
+      "b": "Snail",
+      "fence": "brown",
       "id": "C01"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "brown",
+      "a": "Horse",
+      "b": "Spider",
+      "fence": "black",
       "id": "C02"
     },
     {
-      "a": null,
+      "a": "Bee",
       "b": null,
-      "fence": "black",
+      "fence": "brown",
       "id": "C03"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "white",
+      "a": "Cow",
+      "b": "Dog",
+      "fence": "black",
       "id": "C04"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "brown",
+      "a": "Bee",
+      "b": "Bee",
+      "fence": "white",
       "id": "C05"
     },
     {
-      "a": null,
-      "b": null,
-      "fence": "black",
+      "a": "Bee",
+      "b": "Snail",
+      "fence": "white",
       "id": "C06"
     }
   ],
@@ -94,6 +94,20 @@
     "blocked": [
       {
         "cell": [
+          3,
+          3
+        ],
+        "type": "tree"
+      },
+      {
+        "cell": [
+          2,
+          3
+        ],
+        "type": "tractor"
+      },
+      {
+        "cell": [
           0,
           3
         ],
@@ -105,25 +119,100 @@
           3
         ],
         "type": "house"
-      },
-      {
-        "cell": [
-          2,
-          3
-        ],
-        "type": "tractor"
-      },
-      {
-        "cell": [
-          3,
-          3
-        ],
-        "type": "tree"
       }
     ],
     "cols": 4,
     "rows": 4
   },
-  "regions": [],
+  "regions": [
+    {
+      "cells": [
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ]
+      ],
+      "id": "R1",
+      "rule": {
+        "op": "=",
+        "type": "animals",
+        "value": 2
+      }
+    },
+    {
+      "cells": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "id": "R2",
+      "rule": {
+        "op": "=",
+        "type": "legs",
+        "value": 10
+      }
+    },
+    {
+      "cells": [
+        [
+          3,
+          2
+        ]
+      ],
+      "id": "R3",
+      "rule": {
+        "op": "=",
+        "type": "legs",
+        "value": 6
+      }
+    },
+    {
+      "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "id": "R4",
+      "rule": {
+        "op": "=",
+        "type": "animals",
+        "value": 6
+      }
+    }
+  ],
   "schemaVersion": 1
 }
