@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: "10 0 * * *"  # 00:10 UTC
   workflow_dispatch:
+  permissions:
+  contents: write
 
 jobs:
   generate:
