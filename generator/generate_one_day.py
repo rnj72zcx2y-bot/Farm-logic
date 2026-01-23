@@ -11,15 +11,13 @@ from .solver_unique import solve_count
 from .difficulty_score import compute_hardness
 
 # ------------------------------------------------------------
-# Uniqueness-first generator tuning (region count unchanged)
-# - Keep SPECS[diff].regions as-is (Hard stays 16)
-# - Make Hard regions mostly size 3 (stronger constraints)
-# - Prefer strong rules (= and truly-strong uniqueSpecies)
-# - Reduce empties and card symmetries
-# - Try for unique (solutionsFound==1), fallback to solvable
+# DEV-STABLE (FAST) MODE
+# Goal: finish runs quickly and reliably.
+# - Tries for uniqueness first, but with STRICT attempt caps per difficulty.
+# - If uniqueness isn't found quickly, falls back to the first solvable candidate.
+# - Always logs solutionsFound + uniqueSolution + difficultyScore.
 # ------------------------------------------------------------
 
-# --- helpers ---
 
 def sha256_hex(s: str) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
@@ -48,17 +46,14 @@ def make_simple_active_shape(difficulty: str, rows: int, cols: int) -> List[List
     """Deterministic domino-tileable shapes (dev stable)."""
     active: List[List[int]] = []
     if difficulty == "easy":
-        # 4x4 minus last column => 12
         for r in range(rows):
             for c in range(cols - 1):
                 active.append([r, c])
     elif difficulty == "medium":
-        # 6x6 minus last row => 30
         for r in range(rows - 1):
             for c in range(cols):
                 active.append([r, c])
     else:
-        # 8x8 minus last two rows => 48
         for r in range(rows - 2):
             for c in range(cols):
                 active.append([r, c])
@@ -120,7 +115,7 @@ def bipartite_matching_tiling(active_cells: List[Tuple[int, int]]) -> List[Tuple
 
 def _balance_regions(regions: List[set], active_set: set, rows: int, cols: int, rng: random.Random,
                      min_size: int, max_size: int) -> None:
-    """Try to eliminate tiny regions by moving boundary cells from big regions."""
+    """Reduce tiny regions by moving boundary cells from larger regions."""
 
     def boundary_cells(reg: set) -> List[Tuple[int, int]]:
         b = []
@@ -131,53 +126,39 @@ def _balance_regions(regions: List[set], active_set: set, rows: int, cols: int, 
                     break
         return b
 
-    # Try a few passes
-    for _ in range(50):
+    for _ in range(40):
         small = [i for i, r in enumerate(regions) if len(r) < min_size]
-        big = [i for i, r in enumerate(regions) if len(r) > max_size]
         if not small:
             return
+        big = [i for i, r in enumerate(regions) if len(r) > max_size]
         if not big:
-            # allow taking from any region > min_size
             big = [i for i, r in enumerate(regions) if len(r) > min_size]
             if not big:
                 return
 
         si = rng.choice(small)
         bi = rng.choice(big)
-
-        # move a boundary cell from big to small, ensuring connectivity is not strictly checked (dev)
         b_cells = boundary_cells(regions[bi])
         if not b_cells:
             continue
         cell = rng.choice(b_cells)
-
-        # move
         regions[bi].remove(cell)
         regions[si].add(cell)
 
 
 def partition_regions(active_cells: List[Tuple[int, int]], region_count: int, rows: int, cols: int,
                       rng: random.Random, min_size: int, max_size: int) -> List[List[List[int]]]:
-    """Grow contiguous-ish regions from random seeds, with size constraints.
-
-    For Hard (48 cells, 16 regions), we aim for mostly size 3 (min 3, max 4).
-    """
     active_set = set(active_cells)
-
-    # seed cells
     seeds = rng.sample(active_cells, k=min(region_count, len(active_cells)))
     regions = [set([s]) for s in seeds]
     unassigned = active_set - set(seeds)
 
-    # growth loop
     frontiers = [set([s]) for s in seeds]
     while unassigned:
         expandable = []
         for i, fr in enumerate(frontiers):
             if len(regions[i]) >= max_size:
                 continue
-            # any neighbor to claim?
             for cell in fr:
                 for nb in neighbors(cell, rows, cols):
                     if nb in unassigned:
@@ -187,7 +168,6 @@ def partition_regions(active_cells: List[Tuple[int, int]], region_count: int, ro
                     break
 
         if not expandable:
-            # assign rest to smallest regions
             for cell in list(unassigned):
                 i = min(range(len(regions)), key=lambda k: len(regions[k]))
                 regions[i].add(cell)
@@ -211,28 +191,21 @@ def partition_regions(active_cells: List[Tuple[int, int]], region_count: int, ro
         if len(frontiers[i]) > 18:
             frontiers[i] = set(rng.sample(list(frontiers[i]), 9))
 
-    # balance to avoid tiny regions
     _balance_regions(regions, active_set, rows, cols, rng, min_size=min_size, max_size=max_size)
 
-    out = []
-    for reg in regions:
-        out.append([[r, c] for (r, c) in sorted(reg)])
-    return out
+    return [[[r, c] for (r, c) in sorted(reg)] for reg in regions]
 
 
 def pick_animals_for_card(rng: random.Random, difficulty: str) -> Tuple[Optional[str], Optional[str]]:
-    """Return (a,b) where values are animal names or None (empty)."""
-
-    # Empty probability per half – keep hard low to reduce solution symmetry
-    empty_p = {"easy": 0.10, "medium": 0.08, "hard": 0.04}[difficulty]
+    # Reduce empties in medium/hard to reduce symmetry and speed up solve
+    empty_p = {"easy": 0.10, "medium": 0.06, "hard": 0.04}[difficulty]
     names = [a for a, _legs in ANIMALS]
 
-    # Weighting: fewer pure-4-leggers bias by adding some variety
     w = {name: 1.0 for name in names}
     w["Chicken"] = 1.2
     w["Bee"] = 0.95
-    w["Spider"] = 0.75 if difficulty != "hard" else 1.05
-    w["Snail"] = 0.6 if difficulty == "easy" else 0.9
+    w["Spider"] = 0.85 if difficulty != "hard" else 1.05
+    w["Snail"] = 0.7 if difficulty == "easy" else 0.9
 
     weights = [w[n] for n in names]
 
@@ -241,8 +214,8 @@ def pick_animals_for_card(rng: random.Random, difficulty: str) -> Tuple[Optional
             return None
         return rng.choices(names, weights=weights, k=1)[0]
 
-    # avoid None/None (too symmetric)
-    for _ in range(10):
+    # avoid None/None
+    for _ in range(8):
         a, b = sample_one(), sample_one()
         if not (a is None and b is None):
             return a, b
@@ -261,13 +234,6 @@ def legs_of(animal: Optional[str]) -> int:
 def choose_rule_for_region(rng: random.Random, difficulty: str,
                            region_cells: List[Tuple[int, int]],
                            cell_animal: Dict[Tuple[int, int], Optional[str]]) -> Dict[str, Any]:
-    """Uniqueness-first: choose stronger rules, with a validity check.
-
-    Key changes:
-    - Prefer '=' rules
-    - Use 'uniqueSpecies' ONLY when it is actually strong (>=3 animals, no empties, all distinct)
-    - Hard: prefer uniqueSpecies more often
-    """
     animals = [cell_animal[c] for c in region_cells]
     legs_sum = sum(legs_of(a) for a in animals)
     animal_count = sum(1 for a in animals if a is not None)
@@ -276,28 +242,25 @@ def choose_rule_for_region(rng: random.Random, difficulty: str,
     has_empty = any(a is None for a in animals)
 
     strong_unique_ok = (len(region_cells) >= 3) and (not has_empty) and (len(species) == len(region_cells)) and (len(set(species)) == len(species))
-
-    only_ok = (not has_empty) and (len(set(species)) == 1) and (len(species) == len(region_cells))
+    only_ok = (not has_empty) and (len(species) == len(region_cells)) and (len(set(species)) == 1)
 
     size = len(region_cells)
 
     if difficulty == "easy":
         choices = ["legs_eq", "animals_eq", "unique", "only"]
-        weights = [0.60, 0.33, 0.05, 0.02]
+        weights = [0.62, 0.33, 0.04, 0.01]
     elif difficulty == "medium":
-        choices = ["legs_eq", "animals_eq", "unique", "legs_lt", "legs_gt"]
-        weights = [0.45, 0.30, 0.18, 0.04, 0.03]
+        choices = ["legs_eq", "animals_eq", "unique"]
+        weights = [0.50, 0.33, 0.17]
     else:
-        choices = ["unique", "legs_eq", "animals_eq", "animals_gt", "legs_lt", "legs_gt"]
-        weights = [0.55, 0.18, 0.16, 0.05, 0.03, 0.03]
+        choices = ["unique", "legs_eq", "animals_eq"]
+        weights = [0.55, 0.25, 0.20]
 
-    # Tiny regions: uniqueSpecies is not helpful; stick to '=' rules
     if size <= 2:
         choices = ["legs_eq", "animals_eq"]
-        weights = [0.65, 0.35]
+        weights = [0.7, 0.3]
 
-    filtered = []
-    filtered_w = []
+    filtered, filtered_w = [], []
     for ch, w in zip(choices, weights):
         if ch == "unique" and not strong_unique_ok:
             continue
@@ -307,23 +270,14 @@ def choose_rule_for_region(rng: random.Random, difficulty: str,
         filtered_w.append(w)
 
     if not filtered:
-        filtered = ["legs_eq"]
-        filtered_w = [1.0]
+        filtered, filtered_w = ["legs_eq"], [1.0]
 
     rule_type = rng.choices(filtered, weights=filtered_w, k=1)[0]
 
     if rule_type == "legs_eq":
         return {"type": "legs", "op": "=", "value": legs_sum}
-    if rule_type == "legs_lt":
-        return {"type": "legs", "op": "<", "value": legs_sum + 2}
-    if rule_type == "legs_gt":
-        return {"type": "legs", "op": ">", "value": max(0, legs_sum - 2)}
-
     if rule_type == "animals_eq":
         return {"type": "animals", "op": "=", "value": animal_count}
-    if rule_type == "animals_gt":
-        return {"type": "animals", "op": ">", "value": max(0, animal_count - 1)}
-
     if rule_type == "unique":
         return {"type": "uniqueSpecies"}
     if rule_type == "only":
@@ -332,15 +286,7 @@ def choose_rule_for_region(rng: random.Random, difficulty: str,
     return {"type": "legs", "op": "=", "value": legs_sum}
 
 
-# ----------------------------
-# Candidate generation
-# ----------------------------
-
 def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str, Any]:
-    """Generate candidate puzzle with structured regions + rules.
-
-    Region count remains unchanged (Hard stays 16).
-    """
     spec = SPECS[difficulty]
     rng = random.Random(build_seed_int(date_utc, difficulty, attempt))
 
@@ -350,27 +296,19 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
 
     blocked = make_blockers(rows, cols, active_ll, rng)
 
-    # Hidden assignment from one tiling
     pairs = bipartite_matching_tiling(active)
 
-    # Limit duplicate cards to reduce symmetry
-    max_dupes = {"easy": 2, "medium": 2, "hard": 1}[difficulty]
+    # reduce duplicate card pairs (symmetry)
+    max_dupes = {"easy": 2, "medium": 1, "hard": 1}[difficulty]
     pair_counts: Dict[Tuple[str, str], int] = {}
 
     fences = [FENCE_COLORS[i % 3] for i in range(spec.cards)]
     rng.shuffle(fences)
 
     cards = []
-    force_snail = (difficulty != "easy")
-    forced_used = False
-
     for i in range(spec.cards):
-        for _ in range(60):
+        for _ in range(50):
             a, b = pick_animals_for_card(rng, difficulty)
-            if force_snail and not forced_used:
-                a = "Snail"
-                forced_used = True
-
             key = tuple(sorted([(a or "_"), (b or "_")]))
             pair_counts[key] = pair_counts.get(key, 0) + 1
             if pair_counts[key] <= max_dupes:
@@ -381,17 +319,10 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
                     "b": b,
                 })
                 break
-            else:
-                pair_counts[key] -= 1
+            pair_counts[key] -= 1
         else:
-            cards.append({
-                "id": f"C{i+1:02d}",
-                "fence": fences[i],
-                "a": None,
-                "b": "Snail" if difficulty == "hard" else None,
-            })
+            cards.append({"id": f"C{i+1:02d}", "fence": fences[i], "a": "Snail", "b": None})
 
-    # Apply cards to tiling pairs to build hidden assignment
     rng.shuffle(pairs)
     cell_animal: Dict[Tuple[int, int], Optional[str]] = {}
     for i, (u, v) in enumerate(pairs[:spec.cards]):
@@ -406,9 +337,10 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
     for c in active:
         cell_animal.setdefault(c, None)
 
-    # Region size constraints by difficulty
     if difficulty == "hard":
         min_size, max_size = 3, 4
+    elif difficulty == "medium":
+        min_size, max_size = 2, 4
     else:
         min_size, max_size = 2, 5
 
@@ -418,48 +350,46 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
     for idx, cell_list in enumerate(region_cells_ll):
         rcells = [tuple(x) for x in cell_list]
         rule = choose_rule_for_region(rng, difficulty, rcells, cell_animal)
-        regions.append({
-            "id": f"R{idx+1}",
-            "cells": cell_list,
-            "rule": rule
-        })
+        regions.append({"id": f"R{idx+1}", "cells": cell_list, "rule": rule})
 
     return {
         "dateUtc": date_utc,
         "difficulty": difficulty,
         "schemaVersion": 1,
         "generatorVersion": GENERATOR_VERSION,
-        "grid": {
-            "rows": rows,
-            "cols": cols,
-            "activeCellsCoords": active_ll,
-            "blocked": blocked,
-        },
+        "grid": {"rows": rows, "cols": cols, "activeCellsCoords": active_ll, "blocked": blocked},
         "regions": regions,
         "cards": cards,
-        "_internal": {"seed": build_seed_str(date_utc, difficulty), "attempt": attempt}
+        "_internal": {"seed": build_seed_str(date_utc, difficulty), "attempt": attempt},
     }
 
 
-# ----------------------------
-# Uniqueness-first generate_unique (dev-stable)
-# ----------------------------
-
-def generate_unique(date_utc: str, difficulty: str, max_attempts: int = 3500) -> Dict[str, Any]:
-    """Uniqueness-first (DEV stable).
-
-    Try for unique solutions first; otherwise fallback to the first solvable puzzle.
-    """
+def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
+    """FAST: strict attempt caps so workflow finishes quickly."""
     spec = SPECS[difficulty]
+
+    attempt_caps = {"easy": 250, "medium": 40, "hard": 60}
+    timeout_caps = {"easy": 8, "medium": 5, "hard": 8}
+
+    max_attempts = attempt_caps.get(difficulty, 60)
+    max_timeouts = timeout_caps.get(difficulty, 6)
 
     best_solvable = None
     best_stats = None
     best_score = None
 
+    timeouts = 0
+
     for attempt in range(max_attempts):
         puzzle = generate_candidate(date_utc, difficulty, attempt)
 
         solutions, stats = solve_count(puzzle, stop_at=2)
+
+        if stats.get("timedOut"):
+            timeouts += 1
+            if timeouts >= max_timeouts and best_solvable is not None:
+                break
+
         if solutions <= 0:
             continue
 
@@ -474,18 +404,10 @@ def generate_unique(date_utc: str, difficulty: str, max_attempts: int = 3500) ->
             puzzle["_internal"]["difficultyScore"] = score
             return puzzle
 
-    # Fallback (still green)
+    # fallback
     if best_solvable is None:
         best_solvable = generate_candidate(date_utc, difficulty, 0)
-        best_stats = {
-            "type": "CSP-backtracking",
-            "stopAt": 2,
-            "solutionsFound": 0,
-            "nodesVisited": 0,
-            "backtracks": 0,
-            "maxDepth": 0,
-            "timeMs": 0,
-        }
+        best_stats = {"type": "CSP-backtracking", "stopAt": 2, "solutionsFound": 0, "nodesVisited": 0, "backtracks": 0, "maxDepth": 0, "timeMs": 0, "timedOut": False}
         best_score = {"hardness01": 0.0, "passedBand": False}
 
     best_solvable["_internal"]["uniqueSolution"] = False
@@ -493,10 +415,6 @@ def generate_unique(date_utc: str, difficulty: str, max_attempts: int = 3500) ->
     best_solvable["_internal"]["difficultyScore"] = best_score
     return best_solvable
 
-
-# ----------------------------
-# Meta
-# ----------------------------
 
 def build_meta(date_utc: str, puzzles_by_diff: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
     meta = {
@@ -510,12 +428,9 @@ def build_meta(date_utc: str, puzzles_by_diff: Dict[str, Dict[str, Any]]) -> Dic
             "counting": "rules evaluate per CELL; cards may cross regions",
             "emptyAllowed": True,
             "fenceColor": "white/brown/black only (hint-only; not used in rules)",
-            "ui": {
-                "checkEnabledOnlyWhenAllCardsPlaced": True,
-                "snapToValid": True
-            }
+            "ui": {"checkEnabledOnlyWhenAllCardsPlaced": True, "snapToValid": True},
         },
-        "difficulties": {}
+        "difficulties": {},
     }
 
     for diff, puzzle in puzzles_by_diff.items():
@@ -532,7 +447,7 @@ def build_meta(date_utc: str, puzzles_by_diff: Dict[str, Dict[str, Any]]) -> Dic
                 "rows": public_puzzle["grid"]["rows"],
                 "cols": public_puzzle["grid"]["cols"],
                 "activeCells": len(public_puzzle["grid"]["activeCellsCoords"]),
-                "cards": spec.cards
+                "cards": spec.cards,
             },
             "seed": puzzle["_internal"]["seed"],
             "uniqueSolution": bool(unique_flag),
@@ -544,11 +459,13 @@ def build_meta(date_utc: str, puzzles_by_diff: Dict[str, Dict[str, Any]]) -> Dic
                     "nodesVisited": stats.get("nodesVisited"),
                     "backtracks": stats.get("backtracks"),
                     "maxDepth": stats.get("maxDepth"),
-                    "timeMs": stats.get("timeMs")
-                }
+                    "timeMs": stats.get("timeMs"),
+                    "timedOut": stats.get("timedOut"),
+                    "timeLimitSec": stats.get("timeLimitSec"),
+                },
             },
             "difficultyScore": score,
-            "hash": {"puzzleJson": puzzle_hash}
+            "hash": {"puzzleJson": puzzle_hash},
         }
 
     return meta
