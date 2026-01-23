@@ -14,13 +14,13 @@
     },
     {
       "a": "Cat",
-      "b": "Cat",
+      "b": "Bee",
       "fence": "brown",
       "id": "C03"
     },
     {
       "a": "Chicken",
-      "b": "Spider",
+      "b": "Snail",
       "fence": "black",
       "id": "C04"
     },
@@ -188,7 +188,7 @@
       "rule": {
         "op": "=",
         "type": "legs",
-        "value": 12
+        "value": 6
       }
     },
     {
