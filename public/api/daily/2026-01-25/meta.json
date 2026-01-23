@@ -4,16 +4,16 @@
     "easy": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 0.0,
+          "btPerCard": 185.33,
           "maxDepth": 6,
           "mu": 0.85,
-          "nvPerCard": 1.0,
-          "raw": 0.0903,
+          "nvPerCard": 294.17,
+          "raw": 2.1064,
           "sigma": 0.25,
-          "tPerCardMs": 0.0
+          "tPerCardMs": 5.0
         },
-        "hardness01": 0.0457,
-        "passedBand": true,
+        "hardness01": 0.9935,
+        "passedBand": false,
         "targetBand": [
           0.2,
           0.4
@@ -26,35 +26,35 @@
         "rows": 4
       },
       "hash": {
-        "puzzleJson": "sha256:ae13299862419621b517a06a7549a5787150a50836b07034f7fcb1a01de7b472"
+        "puzzleJson": "sha256:5e9af81b6b539bb95c49b4f92723aed2df0388cc368d0ee9d86644b75b535d55"
       },
-      "seed": "sha256:894f0d8b7ec02b4f0f67ebe635d26a3af9fca7962899924160fa0aa89c39bec1",
+      "seed": "sha256:3bd947902a58d33cd7156685cb0c135c3efafd6c61f6259f0efe707def929064",
       "solver": {
         "stats": {
-          "backtracks": 0,
+          "backtracks": 1112,
           "maxDepth": 6,
-          "nodesVisited": 6,
-          "solutionsFound": 1,
-          "timeMs": 0
+          "nodesVisited": 1765,
+          "solutionsFound": 2,
+          "timeMs": 30
         },
         "stopAt": 2,
-        "type": "tiling-feasibility"
+        "type": "CSP-backtracking"
       },
-      "uniqueSolution": true
+      "uniqueSolution": false
     },
     "hard": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 0.0,
+          "btPerCard": 634038.08,
           "maxDepth": 24,
           "mu": 0.85,
-          "nvPerCard": 1.0,
-          "raw": 0.0903,
+          "nvPerCard": 788186.75,
+          "raw": 5.6104,
           "sigma": 0.25,
-          "tPerCardMs": 0.0
+          "tPerCardMs": 21611.04
         },
-        "hardness01": 0.0457,
-        "passedBand": true,
+        "hardness01": 1.0,
+        "passedBand": false,
         "targetBand": [
           0.7,
           0.9
@@ -67,35 +67,35 @@
         "rows": 8
       },
       "hash": {
-        "puzzleJson": "sha256:c61744312e5f427fa40d576f4e91d2c0bd6bc2bc0cf5d6e13d0752e617586fd8"
+        "puzzleJson": "sha256:15ed1ab90238d62ab31c85ee1ae301a0f1cbc1fd89ef1017704e7c20413e9116"
       },
-      "seed": "sha256:d130bf0d9a566195976e25c8b6761e0553ccb1e528147c5277f0641ea91d63ae",
+      "seed": "sha256:6c8546ae29414a509593ee0369beb3157e6a96ce964a34927220723425c71ed9",
       "solver": {
         "stats": {
-          "backtracks": 0,
+          "backtracks": 15216914,
           "maxDepth": 24,
-          "nodesVisited": 24,
-          "solutionsFound": 1,
-          "timeMs": 0
+          "nodesVisited": 18916482,
+          "solutionsFound": 2,
+          "timeMs": 518665
         },
         "stopAt": 2,
-        "type": "tiling-feasibility"
+        "type": "CSP-backtracking"
       },
-      "uniqueSolution": true
+      "uniqueSolution": false
     },
     "medium": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 0.0,
+          "btPerCard": 131.67,
           "maxDepth": 15,
           "mu": 0.85,
-          "nvPerCard": 1.0,
-          "raw": 0.0903,
+          "nvPerCard": 206.4,
+          "raw": 2.0164,
           "sigma": 0.25,
-          "tPerCardMs": 0.0
+          "tPerCardMs": 9.6
         },
-        "hardness01": 0.0457,
-        "passedBand": true,
+        "hardness01": 0.9907,
+        "passedBand": false,
         "targetBand": [
           0.45,
           0.65
@@ -108,26 +108,26 @@
         "rows": 6
       },
       "hash": {
-        "puzzleJson": "sha256:3386a0cb65dc0fb5023dc9a7cfa586a50d291aa33f9786418a07b282701060f4"
+        "puzzleJson": "sha256:251d3fc4d8094aedcb0e9f74a73cbad48bffaa155e3228ff0f2d2f1a13689f13"
       },
-      "seed": "sha256:785c29bfb77149dd68d6b51760e9d00ee32bea84a9c0af6b1a524a60c4a4f19b",
+      "seed": "sha256:57c8375491c5d4aea2ddb274d377220ba82cd4b960d553050d052d954947cf44",
       "solver": {
         "stats": {
-          "backtracks": 0,
+          "backtracks": 1975,
           "maxDepth": 15,
-          "nodesVisited": 15,
-          "solutionsFound": 1,
-          "timeMs": 0
+          "nodesVisited": 3096,
+          "solutionsFound": 2,
+          "timeMs": 144
         },
         "stopAt": 2,
-        "type": "tiling-feasibility"
+        "type": "CSP-backtracking"
       },
-      "uniqueSolution": true
+      "uniqueSolution": false
     }
   },
-  "generatedAtUtc": "2026-01-22T23:37:56Z",
+  "generatedAtUtc": "2026-01-23T01:04:27Z",
   "generatorVersion": "1.0.0",
-  "gitCommit": "763cc48",
+  "gitCommit": "d16d0c8",
   "notes": {
     "animals": [
       "Chicken",

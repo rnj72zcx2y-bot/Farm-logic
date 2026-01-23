@@ -1,39 +1,39 @@
 {
   "cards": [
     {
-      "a": "Bee",
-      "b": null,
-      "fence": "brown",
+      "a": "Dog",
+      "b": "Chicken",
+      "fence": "white",
       "id": "C01"
     },
     {
-      "a": "Snail",
-      "b": "Horse",
-      "fence": "black",
-      "id": "C02"
-    },
-    {
       "a": "Bee",
       "b": null,
-      "fence": "white",
-      "id": "C03"
+      "fence": "brown",
+      "id": "C02"
     },
     {
       "a": "Cat",
       "b": "Cat",
       "fence": "black",
+      "id": "C03"
+    },
+    {
+      "a": "Cow",
+      "b": "Snail",
+      "fence": "brown",
       "id": "C04"
     },
     {
-      "a": "Horse",
+      "a": "Cow",
       "b": "Chicken",
       "fence": "white",
       "id": "C05"
     },
     {
-      "a": "Dog",
-      "b": "Cat",
-      "fence": "brown",
+      "a": "Horse",
+      "b": "Spider",
+      "fence": "black",
       "id": "C06"
     }
   ],
@@ -129,10 +129,18 @@
       "cells": [
         [
           0,
+          2
+        ],
+        [
+          1,
           1
         ],
         [
-          0,
+          1,
+          2
+        ],
+        [
+          2,
           2
         ]
       ],
@@ -140,29 +148,7 @@
       "rule": {
         "op": "=",
         "type": "animals",
-        "value": 2
-      }
-    },
-    {
-      "cells": [
-        [
-          1,
-          2
-        ],
-        [
-          2,
-          2
-        ],
-        [
-          3,
-          2
-        ]
-      ],
-      "id": "R2",
-      "rule": {
-        "op": "=",
-        "type": "legs",
-        "value": 12
+        "value": 3
       }
     },
     {
@@ -176,11 +162,25 @@
           0
         ],
         [
-          1,
-          1
+          2,
+          0
         ],
         [
-          2,
+          3,
+          0
+        ]
+      ],
+      "id": "R2",
+      "rule": {
+        "op": "=",
+        "type": "legs",
+        "value": 20
+      }
+    },
+    {
+      "cells": [
+        [
+          0,
           1
         ]
       ],
@@ -188,29 +188,29 @@
       "rule": {
         "op": "=",
         "type": "animals",
-        "value": 2
+        "value": 1
       }
     },
     {
       "cells": [
         [
           2,
-          0
-        ],
-        [
-          3,
-          0
+          1
         ],
         [
           3,
           1
+        ],
+        [
+          3,
+          2
         ]
       ],
       "id": "R4",
       "rule": {
         "op": "=",
-        "type": "animals",
-        "value": 3
+        "type": "legs",
+        "value": 10
       }
     }
   ],
