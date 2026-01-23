@@ -8,19 +8,19 @@
     },
     {
       "a": "Cow",
-      "b": "Cat",
+      "b": "Bee",
       "fence": "white",
       "id": "C02"
     },
     {
-      "a": "Horse",
+      "a": "Dog",
       "b": "Snail",
       "fence": "black",
       "id": "C03"
     },
     {
-      "a": "Bee",
-      "b": "Cat",
+      "a": "Spider",
+      "b": "Bee",
       "fence": "white",
       "id": "C04"
     },
@@ -31,8 +31,8 @@
       "id": "C05"
     },
     {
-      "a": "Bee",
-      "b": "Bee",
+      "a": "Spider",
+      "b": "Spider",
       "fence": "brown",
       "id": "C06"
     }
@@ -128,23 +128,15 @@
     {
       "cells": [
         [
-          0,
-          0
-        ],
-        [
-          0,
+          2,
           1
         ],
         [
-          1,
+          3,
           0
         ],
         [
-          2,
-          0
-        ],
-        [
-          2,
+          3,
           1
         ]
       ],
@@ -152,11 +144,37 @@
       "rule": {
         "op": "=",
         "type": "animals",
-        "value": 5
+        "value": 3
       }
     },
     {
       "cells": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "id": "R2",
+      "rule": {
+        "op": "=",
+        "type": "animals",
+        "value": 3
+      }
+    },
+    {
+      "cells": [
+        [
+          1,
+          2
+        ],
         [
           2,
           2
@@ -166,7 +184,7 @@
           2
         ]
       ],
-      "id": "R2",
+      "id": "R3",
       "rule": {
         "op": "=",
         "type": "legs",
@@ -176,41 +194,23 @@
     {
       "cells": [
         [
-          3,
+          1,
           0
         ],
         [
-          3,
-          1
-        ]
-      ],
-      "id": "R3",
-      "rule": {
-        "op": "=",
-        "type": "legs",
-        "value": 8
-      }
-    },
-    {
-      "cells": [
-        [
-          0,
-          2
-        ],
-        [
           1,
           1
         ],
         [
-          1,
-          2
+          2,
+          0
         ]
       ],
       "id": "R4",
       "rule": {
         "op": "=",
         "type": "legs",
-        "value": 8
+        "value": 18
       }
     }
   ],

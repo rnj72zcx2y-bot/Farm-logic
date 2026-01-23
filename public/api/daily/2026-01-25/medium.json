@@ -1,7 +1,7 @@
 {
   "cards": [
     {
-      "a": "Snail",
+      "a": "Cat",
       "b": "Cow",
       "fence": "brown",
       "id": "C01"
@@ -14,48 +14,48 @@
     },
     {
       "a": "Bee",
-      "b": null,
+      "b": "Horse",
       "fence": "black",
       "id": "C03"
     },
     {
-      "a": "Dog",
-      "b": "Cat",
+      "a": "Cow",
+      "b": "Cow",
       "fence": "brown",
       "id": "C04"
     },
     {
       "a": "Horse",
-      "b": "Chicken",
+      "b": null,
       "fence": "white",
       "id": "C05"
     },
     {
-      "a": "Bee",
-      "b": null,
+      "a": "Spider",
+      "b": "Horse",
       "fence": "white",
       "id": "C06"
     },
     {
-      "a": "Dog",
-      "b": "Snail",
+      "a": "Snail",
+      "b": "Horse",
       "fence": "white",
       "id": "C07"
     },
     {
-      "a": "Cow",
-      "b": "Cow",
+      "a": "Cat",
+      "b": "Cat",
       "fence": "black",
       "id": "C08"
     },
     {
       "a": "Bee",
-      "b": "Horse",
+      "b": "Cow",
       "fence": "black",
       "id": "C09"
     },
     {
-      "a": "Chicken",
+      "a": null,
       "b": "Chicken",
       "fence": "brown",
       "id": "C10"
@@ -80,13 +80,13 @@
     },
     {
       "a": "Spider",
-      "b": "Horse",
+      "b": "Dog",
       "fence": "brown",
       "id": "C14"
     },
     {
       "a": "Chicken",
-      "b": "Cat",
+      "b": "Bee",
       "fence": "black",
       "id": "C15"
     }
@@ -287,8 +287,8 @@
       "id": "R1",
       "rule": {
         "op": "=",
-        "type": "animals",
-        "value": 4
+        "type": "legs",
+        "value": 16
       }
     },
     {
@@ -308,9 +308,9 @@
       ],
       "id": "R2",
       "rule": {
-        "op": ">",
-        "type": "legs",
-        "value": 6
+        "op": "=",
+        "type": "animals",
+        "value": 3
       }
     },
     {
@@ -327,12 +327,16 @@
       "id": "R3",
       "rule": {
         "op": "=",
-        "type": "animals",
-        "value": 2
+        "type": "legs",
+        "value": 4
       }
     },
     {
       "cells": [
+        [
+          0,
+          5
+        ],
         [
           2,
           2
@@ -340,23 +344,9 @@
       ],
       "id": "R4",
       "rule": {
-        "op": "<",
-        "type": "legs",
-        "value": 2
-      }
-    },
-    {
-      "cells": [
-        [
-          2,
-          0
-        ]
-      ],
-      "id": "R5",
-      "rule": {
         "op": "=",
-        "type": "animals",
-        "value": 1
+        "type": "legs",
+        "value": 12
       }
     },
     {
@@ -366,12 +356,30 @@
           1
         ],
         [
+          2,
+          0
+        ]
+      ],
+      "id": "R5",
+      "rule": {
+        "op": "=",
+        "type": "legs",
+        "value": 8
+      }
+    },
+    {
+      "cells": [
+        [
           0,
           2
         ],
         [
           0,
           3
+        ],
+        [
+          0,
+          4
         ],
         [
           1,
@@ -382,7 +390,7 @@
       "rule": {
         "op": "=",
         "type": "animals",
-        "value": 4
+        "value": 3
       }
     },
     {
@@ -420,21 +428,13 @@
       ],
       "id": "R8",
       "rule": {
-        "op": "<",
-        "type": "legs",
-        "value": 8
+        "op": "=",
+        "type": "animals",
+        "value": 1
       }
     },
     {
       "cells": [
-        [
-          0,
-          4
-        ],
-        [
-          0,
-          5
-        ],
         [
           1,
           4
@@ -446,21 +446,21 @@
         [
           2,
           4
+        ],
+        [
+          2,
+          5
         ]
       ],
       "id": "R9",
       "rule": {
-        "op": "<",
+        "op": "=",
         "type": "legs",
-        "value": 14
+        "value": 10
       }
     },
     {
       "cells": [
-        [
-          2,
-          5
-        ],
         [
           3,
           4
@@ -482,7 +482,7 @@
       "rule": {
         "op": "=",
         "type": "legs",
-        "value": 24
+        "value": 20
       }
     }
   ],

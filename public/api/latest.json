@@ -1,8 +1,8 @@
 {
-  "availableThroughUtc": "2026-01-23",
-  "daysAhead": 1,
-  "generatedAtUtc": "2026-01-23T08:04:13Z",
+  "availableThroughUtc": "2026-01-27",
+  "daysAhead": 5,
+  "generatedAtUtc": "2026-01-23T14:01:56Z",
   "generatorVersion": "1.0.0",
-  "gitCommit": "5a59041",
+  "gitCommit": "dc992c9",
   "schemaVersion": 1
 }

@@ -41,7 +41,7 @@
           "maxDepth": 6,
           "nodesVisited": 13,
           "solutionsFound": 2,
-          "timeLimitSec": 4.0,
+          "timeLimitSec": 30.0,
           "timeMs": 0,
           "timedOut": false
         },
@@ -53,13 +53,13 @@
     "hard": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 8035.96,
-          "maxDepth": 19,
+          "btPerCard": 23598.54,
+          "maxDepth": 24,
           "mu": 0.85,
-          "nvPerCard": 9819.33,
-          "raw": 3.7836,
+          "nvPerCard": 30968.5,
+          "raw": 4.2355,
           "sigma": 0.25,
-          "tPerCardMs": 833.33
+          "tPerCardMs": 1661.58
         },
         "hardness01": 1.0,
         "passedBand": false,
@@ -82,17 +82,17 @@
         "diagnostic": {
           "solutionsFound": 2,
           "stopAt": 3,
-          "timeMs": 2000,
+          "timeMs": 10000,
           "timedOut": true
         },
         "stats": {
-          "backtracks": 192863,
-          "maxDepth": 19,
-          "nodesVisited": 235664,
+          "backtracks": 566365,
+          "maxDepth": 24,
+          "nodesVisited": 743244,
           "solutionsFound": 2,
-          "timeLimitSec": 20.0,
-          "timeMs": 20000,
-          "timedOut": true
+          "timeLimitSec": 240.0,
+          "timeMs": 39878,
+          "timedOut": false
         },
         "stopAt": 2,
         "type": "CSP-backtracking"
@@ -102,13 +102,13 @@
     "medium": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 33784.73,
+          "btPerCard": 407057.27,
           "maxDepth": 14,
           "mu": 0.85,
-          "nvPerCard": 43876.93,
-          "raw": 4.3072,
+          "nvPerCard": 524368.0,
+          "raw": 5.3867,
           "sigma": 0.25,
-          "tPerCardMs": 666.67
+          "tPerCardMs": 8000.0
         },
         "hardness01": 1.0,
         "passedBand": false,
@@ -131,16 +131,16 @@
         "diagnostic": {
           "solutionsFound": 2,
           "stopAt": 3,
-          "timeMs": 2000,
+          "timeMs": 10000,
           "timedOut": true
         },
         "stats": {
-          "backtracks": 506771,
+          "backtracks": 6105859,
           "maxDepth": 14,
-          "nodesVisited": 658154,
+          "nodesVisited": 7865520,
           "solutionsFound": 2,
-          "timeLimitSec": 10.0,
-          "timeMs": 10000,
+          "timeLimitSec": 120.0,
+          "timeMs": 120000,
           "timedOut": true
         },
         "stopAt": 2,
@@ -149,9 +149,9 @@
       "uniqueSolution": false
     }
   },
-  "generatedAtUtc": "2026-01-23T08:04:13Z",
+  "generatedAtUtc": "2026-01-23T09:21:12Z",
   "generatorVersion": "1.0.0",
-  "gitCommit": "5a59041",
+  "gitCommit": "dc992c9",
   "notes": {
     "animals": [
       "Chicken",
