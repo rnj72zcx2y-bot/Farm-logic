@@ -1,4 +1,4 @@
-name: Generate Daily Puzzles (DEV stable)
+name: Generate Daily Puzzles
 
 on:
   schedule:
