@@ -4,15 +4,15 @@
     "easy": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 83.17,
+          "btPerCard": 16.5,
           "maxDepth": 6,
           "mu": 0.85,
-          "nvPerCard": 149.17,
-          "raw": 1.7902,
+          "nvPerCard": 30.0,
+          "raw": 1.1575,
           "sigma": 0.25,
-          "tPerCardMs": 2.33
+          "tPerCardMs": 0.5
         },
-        "hardness01": 0.9773,
+        "hardness01": 0.7738,
         "passedBand": false,
         "targetBand": [
           0.2,
@@ -26,16 +26,18 @@
         "rows": 4
       },
       "hash": {
-        "puzzleJson": "sha256:476d6a7f73faac303cda121d7d1ff995ddc79acfba5862ed908e52bb37220489"
+        "puzzleJson": "sha256:960fd769b5418603b5b515b09a7cb2d495db6fc4496a5a5684a4a4696c7bf5e7"
       },
       "seed": "sha256:29653770b0bb713c530367101c9b57250de72ba88d52f8b0934e6b43964b8ba0",
       "solver": {
         "stats": {
-          "backtracks": 499,
+          "backtracks": 99,
           "maxDepth": 6,
-          "nodesVisited": 895,
+          "nodesVisited": 180,
           "solutionsFound": 2,
-          "timeMs": 14
+          "timeLimitSec": 4.0,
+          "timeMs": 3,
+          "timedOut": false
         },
         "stopAt": 2,
         "type": "CSP-backtracking"
@@ -45,15 +47,15 @@
     "hard": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 0.08,
-          "maxDepth": 24,
+          "btPerCard": 20845.75,
+          "maxDepth": 23,
           "mu": 0.85,
-          "nvPerCard": 1.17,
-          "raw": 0.1225,
+          "nvPerCard": 32392.21,
+          "raw": 4.1481,
           "sigma": 0.25,
-          "tPerCardMs": 0.04
+          "tPerCardMs": 625.0
         },
-        "hardness01": 0.0517,
+        "hardness01": 1.0,
         "passedBand": false,
         "targetBand": [
           0.7,
@@ -67,16 +69,18 @@
         "rows": 8
       },
       "hash": {
-        "puzzleJson": "sha256:b846a82489423591194a4c97059bb36f4fcebd474107a6603c730fbe8946e9d5"
+        "puzzleJson": "sha256:0dd1c12224136dc8dd4b391fe3a6838c99cfd4d468e0a7e6e3d31d5b11e33c20"
       },
       "seed": "sha256:ebe5bca6af19b61b6e98e6a8dc067b3d36eb4a7b022a93412a8c1815a1e89db5",
       "solver": {
         "stats": {
-          "backtracks": 2,
-          "maxDepth": 24,
-          "nodesVisited": 28,
+          "backtracks": 500298,
+          "maxDepth": 23,
+          "nodesVisited": 777413,
           "solutionsFound": 2,
-          "timeMs": 1
+          "timeLimitSec": 15.0,
+          "timeMs": 15000,
+          "timedOut": true
         },
         "stopAt": 2,
         "type": "CSP-backtracking"
@@ -86,15 +90,15 @@
     "medium": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 51.87,
+          "btPerCard": 0.47,
           "maxDepth": 15,
           "mu": 0.85,
-          "nvPerCard": 88.27,
-          "raw": 1.5882,
+          "nvPerCard": 1.67,
+          "raw": 0.2193,
           "sigma": 0.25,
-          "tPerCardMs": 1.33
+          "tPerCardMs": 0.0
         },
-        "hardness01": 0.9504,
+        "hardness01": 0.0743,
         "passedBand": false,
         "targetBand": [
           0.45,
@@ -108,16 +112,18 @@
         "rows": 6
       },
       "hash": {
-        "puzzleJson": "sha256:f7f38f6c5ccd5d0cb95f395ea8e559dd50e118941503b43255f5f3623ed7c94a"
+        "puzzleJson": "sha256:9b55d442b1e621e88702f3e4c7c7a5fcf8a70c70dd6774f29692c707470d1435"
       },
       "seed": "sha256:8d08f23cf870cb47ae15ce082a97ca1cc2561536d80cb89dc3773a245613b5df",
       "solver": {
         "stats": {
-          "backtracks": 778,
+          "backtracks": 7,
           "maxDepth": 15,
-          "nodesVisited": 1324,
+          "nodesVisited": 25,
           "solutionsFound": 2,
-          "timeMs": 20
+          "timeLimitSec": 10.0,
+          "timeMs": 0,
+          "timedOut": false
         },
         "stopAt": 2,
         "type": "CSP-backtracking"
@@ -125,9 +131,9 @@
       "uniqueSolution": false
     }
   },
-  "generatedAtUtc": "2026-01-23T03:55:35Z",
+  "generatedAtUtc": "2026-01-23T05:15:41Z",
   "generatorVersion": "1.0.0",
-  "gitCommit": "2c81d07",
+  "gitCommit": "90f7bd6",
   "notes": {
     "animals": [
       "Chicken",

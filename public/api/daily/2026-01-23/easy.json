@@ -13,7 +13,7 @@
       "id": "C02"
     },
     {
-      "a": "Dog",
+      "a": "Cat",
       "b": "Cat",
       "fence": "brown",
       "id": "C03"
@@ -31,8 +31,8 @@
       "id": "C05"
     },
     {
-      "a": "Dog",
-      "b": "Horse",
+      "a": "Cat",
+      "b": "Dog",
       "fence": "white",
       "id": "C06"
     }
@@ -209,8 +209,8 @@
       "id": "R4",
       "rule": {
         "op": "=",
-        "type": "animals",
-        "value": 3
+        "type": "legs",
+        "value": 12
       }
     }
   ],
