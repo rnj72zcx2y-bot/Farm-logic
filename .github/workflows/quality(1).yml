@@ -1,0 +1,76 @@
+name: Generate Daily Puzzles (QUALITY / uniqueness-first)
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Days ahead to generate (quality default: 3)"
+        required: false
+        default: "3"
+      verbose:
+        description: "Enable generator progress logs (true/false)"
+        required: false
+        default: "true"
+
+# Prevent concurrent runs from pushing to main at the same time
+concurrency:
+  group: daily-generate-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install -r generator/requirements.txt
+
+      - name: Generate (uniqueness-first)
+        env:
+          GLOBAL_SALT: ${{ secrets.GLOBAL_SALT }}
+
+          # Solver progress + generous time limits
+          SOLVER_VERBOSE: "true"
+          SOLVER_PROGRESS_EVERY: "50000"
+          SOLVER_TIME_LIMIT_EASY: "30"
+          SOLVER_TIME_LIMIT_MEDIUM: "120"
+          SOLVER_TIME_LIMIT_HARD: "240"
+
+          # Diagnostic pass (optional)
+          SOLVER_DIAG_ENABLED: "true"
+          SOLVER_DIAG_TIME_LIMIT_SEC: "10.0"
+        run: |
+          DAYS="${{ inputs.days }}"
+          VERBOSE="${{ inputs.verbose }}"
+          echo "[WF] QUALITY days=$DAYS verbose=$VERBOSE"
+          if [ "$VERBOSE" = "true" ]; then
+            python -u -m generator.generate_range --days "$DAYS" --timezone UTC --verbose
+          else
+            python -u -m generator.generate_range --days "$DAYS" --timezone UTC
+          fi
+
+      - name: Commit & push
+        run: |
+          git config user.name "daily-bot"
+          git config user.email "daily-bot@users.noreply.github.com"
+          git add public/api/daily public/api/today.json public/api/latest.json
+          git commit -m "Daily puzzles QUALITY $(date -u +%F)" || exit 0
+
+          # Integrate remote updates to avoid non-fast-forward push failures
+          git fetch origin main
+          git rebase origin/main
+
+          git push origin HEAD:main
