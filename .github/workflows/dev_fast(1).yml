@@ -44,6 +44,11 @@ jobs:
           # Diagnostic pass (stop_at=3) – more useful than 2s
           SOLVER_DIAG_ENABLED: "true"
           SOLVER_DIAG_TIME_LIMIT_-SEC: "15"
+           # quick Score
+            QUICK_SCORE_ENABLED: "true"
+           QUICK_SCORE_RELAX: "true"
+           QUICK_SCORE_MIN_MEDIUM: "4.0"
+           QUICK_SCORE_MIN_EASY: "3.2"
         run: |
           DAYS="${{ inputs.days }}"
           echo "[WF] days=$DAYS (generator verbose=always on)"
