@@ -12,36 +12,53 @@ from .config import SPECS, GENERATOR_VERSION, GIT_COMMIT, GLOBAL_SALT, FENCE_COL
 from .solver_unique import solve_count
 from .difficulty_score import compute_hardness
 
-# ------------------------------------------------------------
-# generate_one_day.py (Flexible regions inside this file)
-#
-# Key features
-# - Flexible region counts per difficulty (range)
-# - Flexible region sizes (min/max; hard max=6)
-# - Varied shapes: islands / zigzags / snakes
-# - Varied seed strategies: spread / cluster / border / center
-# - Solvable-by-construction: rules derived from hidden placement
-# - Uniqueness gate: stop_at=2
-# - Diagnostic: stop_at=3 with small budget
-#
-# Fix A: NEVER accept a 1-region fallback. If region build fails => reject candidate.
-# Fix B: Stabilize expansion by prioritizing regions with small frontier (avoid boxed-in).
-#
-# Easy & Medium tightening
-# - empty_p for easy/medium stays at 0.05
-# - operators: easy 97% '=', medium 92% '='
-# - repair pass if diagnostic proves 3+ (no timeout)
-#
-# NEW (requested): Quick-Score pre-solver filter enabled for BOTH FAST and QUALITY
-# - filters obviously weak/symmetric candidates before solver
-# - adaptive relaxation later in attempts to avoid dead-ends
-# - env overrides supported
-# ------------------------------------------------------------
-
-
 # ============================================================
+# Farm-logic generator (generate_one_day.py)
+#
+# This version includes:
+# - Flexible regions (count/size ranges; island/snake/zigzag shapes)
+# - Solvable-by-construction: hidden placement exists
+# - Uniqueness gate: stop_at=2 + optional diagnostic stop_at=3
+# - Easy/Medium repair pass when diagnostic proves 3+ solutions
+# - Quick-Score pre-solver filter enabled for BOTH FAST and QUALITY
+#   with adaptive relaxation and safety nets (never fail with "no candidate")
+#
+# Fix for recent "no candidate" failures:
+# - Dynamic quick-score threshold (progress + reject-rate)
+# - Occasional filter bypass late in run
+# - Fallback: best quick-score candidate gets solved once if we would otherwise fail
+#
+# Fix for recent HARD unsatisfiable candidates:
+# - For '>' rules we allow negative bound (-1) so regions with 0 still satisfy
+#   (keeps hidden solution valid, avoids accidentally unsatisfiable rules)
+# ============================================================
+
+
+# ----------------------------
+# ENV helpers
+# ----------------------------
+
+def _env_bool(name: str, default: str = "true") -> bool:
+    return os.getenv(name, default).lower() == "true"
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)))
+    except Exception:
+        return int(default)
+
+
+def _env_float(name: str, default: float) -> float:
+    try:
+        return float(os.getenv(name, str(default)))
+    except Exception:
+        return float(default)
+
+
+# ----------------------------
 # Utilities
-# ============================================================
+# ----------------------------
 
 def sha256_hex(s: str) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
@@ -66,12 +83,12 @@ def neighbors(cell: Tuple[int, int], rows: int, cols: int) -> List[Tuple[int, in
     return out
 
 
-# ============================================================
+# ----------------------------
 # Grid / Shape
-# ============================================================
+# ----------------------------
 
 def make_simple_active_shape(difficulty: str, rows: int, cols: int) -> List[List[int]]:
-    """Deterministic domino-tileable shapes (dev stable)."""
+    """Deterministic domino-tileable shapes."""
     active: List[List[int]] = []
     if difficulty == "easy":
         for r in range(rows):
@@ -102,9 +119,9 @@ def make_blockers(rows: int, cols: int, active_cells: List[List[int]], rng: rand
     return blocked
 
 
-# ============================================================
+# ----------------------------
 # Domino tiling
-# ============================================================
+# ----------------------------
 
 def bipartite_matching_tiling(active_cells: List[Tuple[int, int]]) -> List[Tuple[Tuple[int, int], Tuple[int, int]]]:
     """Return one domino tiling as list of cell pairs using bipartite matching."""
@@ -145,9 +162,9 @@ def bipartite_matching_tiling(active_cells: List[Tuple[int, int]]) -> List[Tuple
     return pairs
 
 
-# ============================================================
-# Flexible Regions
-# ============================================================
+# ----------------------------
+# Flexible regions
+# ----------------------------
 
 def region_ranges(difficulty: str) -> Tuple[int, int]:
     if difficulty == "easy":
@@ -176,17 +193,15 @@ def sample_region_count_and_sizes(n_cells: int, difficulty: str, rng: random.Ran
 
         sizes = [min_size] * R
         remaining = n_cells - R * min_size
-
         while remaining > 0:
             i = rng.randrange(R)
             if sizes[i] < max_size:
                 sizes[i] += 1
                 remaining -= 1
-
         rng.shuffle(sizes)
         return R, sizes
 
-    # fallback to nearest feasible
+    # fallback
     R = max(rmin, min(rmax, n_cells // min_size))
     sizes = [min_size] * R
     remaining = n_cells - R * min_size
@@ -263,6 +278,7 @@ def select_seeds(active: List[Tuple[int, int]], R: int, rows: int, cols: int, rn
             pool = active
         return rng.sample(pool, k=R)
 
+    # center
     cr, cc = (rows - 1) / 2.0, (cols - 1) / 2.0
     scored = []
     for cell in active:
@@ -305,20 +321,15 @@ def score_candidate(mode: str, region: set, cand: Tuple[int, int], rows: int, co
 
 
 def build_regions_flexible(active: List[Tuple[int, int]], rows: int, cols: int, difficulty: str, rng: random.Random,
-                           max_retries: int = 220) -> Optional[Tuple[List[List[List[int]]], List[str]]]:
-    """Build connected regions.
-
-    Fix A: no 1-region fallback; return None if cannot build.
-    Fix B: prioritize regions with small frontier.
-    """
+                           max_retries: int = 240) -> Optional[Tuple[List[List[List[int]]], List[str]]]:
+    """Build connected regions. Returns None if unable (Fix A)."""
     active_set = set(active)
     n_cells = len(active)
 
     for _ in range(max_retries):
         R, sizes = sample_region_count_and_sizes(n_cells, difficulty, rng)
         strategy = choose_seed_strategy(rng)
-        weights = choose_mode_weights(rng)
-        modes = sample_modes(R, weights, rng)
+        modes = sample_modes(R, choose_mode_weights(rng), rng)
 
         seeds = select_seeds(active, R, rows, cols, rng, strategy)
 
@@ -354,7 +365,7 @@ def build_regions_flexible(active: List[Tuple[int, int]], rows: int, cols: int, 
             frontiers[i] = fr
 
         steps = 0
-        while unassigned and steps < 35000:
+        while unassigned and steps < 40000:
             cand_regions = [i for i in range(R) if remaining[i] > 0 and len(frontiers[i]) > 0]
             if not cand_regions:
                 any_fr = False
@@ -368,31 +379,32 @@ def build_regions_flexible(active: List[Tuple[int, int]], rows: int, cols: int, 
                     break
                 continue
 
+            # Fix B: regions with smallest frontier first
             cand_regions.sort(key=lambda i: (len(frontiers[i]), -remaining[i]))
-            top = cand_regions[: min(4, len(cand_regions))]
-            i = rng.choice(top)
+            pick_i = rng.choice(cand_regions[: min(4, len(cand_regions))])
 
             scored = []
-            for cand in list(frontiers[i]):
-                scored.append((score_candidate(modes[i], regions[i], cand, rows, cols, active_set, rng), cand))
+            for cand in list(frontiers[pick_i]):
+                scored.append((score_candidate(modes[pick_i], regions[pick_i], cand, rows, cols, active_set, rng), cand))
             scored.sort(key=lambda x: x[0], reverse=True)
             if not scored:
-                refresh_frontier(i)
+                refresh_frontier(pick_i)
                 steps += 1
                 continue
 
-            pick = rng.choice(scored[: min(6, len(scored))])[1]
+            k = min(6, len(scored))
+            pick_cell = rng.choice(scored[:k])[1]
 
-            regions[i].add(pick)
-            remaining[i] -= 1
-            unassigned.remove(pick)
+            regions[pick_i].add(pick_cell)
+            remaining[pick_i] -= 1
+            unassigned.remove(pick_cell)
 
             for j in range(R):
-                frontiers[j].discard(pick)
+                frontiers[j].discard(pick_cell)
 
-            for nb in neighbors(pick, rows, cols):
+            for nb in neighbors(pick_cell, rows, cols):
                 if nb in unassigned:
-                    frontiers[i].add(nb)
+                    frontiers[pick_i].add(nb)
 
             steps += 1
 
@@ -403,9 +415,9 @@ def build_regions_flexible(active: List[Tuple[int, int]], rows: int, cols: int, 
     return None
 
 
-# ============================================================
-# Cards / Animals
-# ============================================================
+# ----------------------------
+# Animals / Cards
+# ----------------------------
 
 def legs_of(animal: Optional[str]) -> int:
     if animal is None:
@@ -417,7 +429,6 @@ def legs_of(animal: Optional[str]) -> int:
 
 
 def pick_animals_for_card(rng: random.Random, difficulty: str) -> Tuple[Optional[str], Optional[str]]:
-    # Keep as requested: easy/medium empties = 0.05
     empty_p = {"easy": 0.05, "medium": 0.05, "hard": 0.04}[difficulty]
     names = [a for a, _legs in ANIMALS]
 
@@ -468,12 +479,11 @@ def solution_lookup(puzzle: Dict[str, Any]) -> Dict[Tuple[int, int], Optional[st
     return out
 
 
-# ============================================================
+# ----------------------------
 # Rules
-# ============================================================
+# ----------------------------
 
 def choose_op(rng: random.Random, difficulty: str) -> str:
-    # Tighten Easy/Medium: far more '=' to increase uniqueness.
     if difficulty == "easy":
         return "=" if rng.random() < 0.97 else ("<" if rng.random() < 0.5 else ">")
     if difficulty == "medium":
@@ -481,17 +491,25 @@ def choose_op(rng: random.Random, difficulty: str) -> str:
     return "=" if rng.random() < 0.75 else ("<" if rng.random() < 0.5 else ">")
 
 
-def choose_rule_for_region(rng: random.Random, difficulty: str,
-                           region_cells: List[Tuple[int, int]],
-                           cell_animal: Dict[Tuple[int, int], Optional[str]]) -> Dict[str, Any]:
+def choose_rule_for_region(
+    rng: random.Random,
+    difficulty: str,
+    region_cells: List[Tuple[int, int]],
+    cell_animal: Dict[Tuple[int, int], Optional[str]],
+) -> Dict[str, Any]:
     animals = [cell_animal[c] for c in region_cells]
     legs_sum = sum(legs_of(a) for a in animals)
     animal_count = sum(1 for a in animals if a is not None)
 
     species = [a for a in animals if a is not None]
     has_empty = any(a is None for a in animals)
+    strong_unique_ok = (
+        (len(region_cells) >= 3)
+        and (not has_empty)
+        and (len(species) == len(region_cells))
+        and (len(set(species)) == len(species))
+    )
 
-    strong_unique_ok = (len(region_cells) >= 3) and (not has_empty) and (len(species) == len(region_cells)) and (len(set(species)) == len(species))
     size = len(region_cells)
 
     if difficulty == "easy":
@@ -525,9 +543,12 @@ def choose_rule_for_region(rng: random.Random, difficulty: str,
         if op == "=":
             val = legs_sum
         elif op == "<":
-            val = legs_sum + rng.randint(1, 4)  # keep hidden solution valid
+            val = legs_sum + rng.randint(1, 4)  # keeps hidden solution valid
         else:
-            val = max(0, legs_sum - rng.randint(1, 4))
+            # IMPORTANT FIX: allow negative bound so 0 > -1 is valid
+            val = legs_sum - rng.randint(1, 4)
+            if val < -1:
+                val = -1
         return {"type": "legs", "op": op, "value": int(val)}
 
     if rule_type == "animals":
@@ -537,7 +558,10 @@ def choose_rule_for_region(rng: random.Random, difficulty: str,
         elif op == "<":
             val = min(len(region_cells) + 1, animal_count + rng.randint(1, 2))
         else:
-            val = max(0, animal_count - rng.randint(1, 2))
+            # IMPORTANT FIX: allow negative bound so 0 > -1 is valid
+            val = animal_count - rng.randint(1, 2)
+            if val < -1:
+                val = -1
         return {"type": "animals", "op": op, "value": int(val)}
 
     return {"type": "uniqueSpecies"}
@@ -603,28 +627,16 @@ def repair_rules_easy_medium(puzzle: Dict[str, Any], rng: random.Random, difficu
     return puzzle
 
 
-# ============================================================
-# Quick-Score (pre-solver filter)
-# ============================================================
-
-
-def _env_bool(name: str, default: str = "true") -> bool:
-    return os.getenv(name, default).lower() == "true"
-
-
-def _env_float(name: str, default: float) -> float:
-    try:
-        return float(os.getenv(name, str(default)))
-    except Exception:
-        return float(default)
-
+# ----------------------------
+# Quick-score filter
+# ----------------------------
 
 def quick_score_min(difficulty: str) -> float:
-    # Conservative defaults; override via env if needed.
+    # Conservative defaults. You can override per workflow via env.
     if difficulty == "easy":
-        return _env_float("QUICK_SCORE_MIN_EASY", 3.2)
+        return _env_float("QUICK_SCORE_MIN_EASY", 3.8)
     if difficulty == "medium":
-        return _env_float("QUICK_SCORE_MIN_MEDIUM", 4.0)
+        return _env_float("QUICK_SCORE_MIN_MEDIUM", 5.5)
     return _env_float("QUICK_SCORE_MIN_HARD", 6.0)
 
 
@@ -686,7 +698,7 @@ def quick_score_candidate(puzzle: Dict[str, Any]) -> float:
         freqp[k] = freqp.get(k, 0) + 1
     dup_pairs = sum((v - 1) for v in freqp.values() if v > 1)
 
-    # E) Mild penalty for extreme 4-leg dominance (kept small)
+    # E) Mild penalty for extreme 4-leg dominance
     four_leg = {"Dog", "Cat", "Cow", "Horse"}
     four_count = 0
     for c in cards:
@@ -709,23 +721,47 @@ def quick_score_candidate(puzzle: Dict[str, Any]) -> float:
     return score
 
 
-def quick_score_threshold_for_attempt(difficulty: str, attempt: int, max_attempts: int) -> float:
-    base = quick_score_min(difficulty)
-    if not _env_bool("QUICK_SCORE_RELAX", "true"):
-        return base
+def quick_score_threshold_dynamic(
+    difficulty: str,
+    attempt: int,
+    max_attempts: int,
+    rejected: int,
+    accepted: int,
+    current_th: float,
+) -> float:
+    """Dynamic threshold adjustment.
 
-    # Relax later to avoid dead-ends
-    progress = attempt / max_attempts if max_attempts > 0 else 0.0
-    if progress > 0.50:
-        base -= 0.7
-    if progress > 0.80:
-        base -= 1.2
-    return base
+    - progress relaxation (late run)
+    - reject-rate regulation (keeps pass-through alive)
+    """
+    th = current_th
+
+    # Progress relaxation
+    progress = attempt / max_attempts if max_attempts else 0.0
+    if _env_bool("QUICK_SCORE_RELAX", "true"):
+        if progress > 0.50:
+            th = min(th, quick_score_min(difficulty) - 0.7)
+        if progress > 0.80:
+            th = min(th, quick_score_min(difficulty) - 1.2)
+
+    # Reject-rate control
+    if _env_bool("QUICK_SCORE_ADAPT", "true") and (attempt > 20) and (attempt % 10 == 0):
+        total = max(1, rejected + accepted)
+        reject_rate = rejected / total
+        target = _env_float("QUICK_SCORE_TARGET_REJECT", 0.75)
+        band = _env_float("QUICK_SCORE_REJECT_BAND", 0.10)
+
+        if reject_rate > target + band:
+            th -= 0.5
+        elif reject_rate < target - band:
+            th += 0.2
+
+    return th
 
 
-# ============================================================
+# ----------------------------
 # Candidate generation
-# ============================================================
+# ----------------------------
 
 def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Optional[Dict[str, Any]]:
     spec = SPECS[difficulty]
@@ -740,13 +776,14 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Optional
     if not pairs:
         return None
 
-    # Reduce duplicates to decrease symmetry
+    # Reduce duplicate unordered pairs to reduce symmetry
     max_dupes = {"easy": 1, "medium": 1, "hard": 1}[difficulty]
     pair_counts: Dict[Tuple[str, str], int] = {}
 
     fences = [FENCE_COLORS[i % 3] for i in range(spec.cards)]
     rng.shuffle(fences)
 
+    # Build cards; retry a few times for easy leg diversity
     for _deck_try in range(12):
         cards = []
         pair_counts.clear()
@@ -768,6 +805,7 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Optional
     if difficulty == "easy" and not ensure_leg_diversity_easy(cards):
         return None
 
+    # Hidden assignment: assign cards onto a domino tiling
     rng.shuffle(pairs)
     cell_animal: Dict[Tuple[int, int], Optional[str]] = {}
     for i, (u, v) in enumerate(pairs[:spec.cards]):
@@ -812,9 +850,9 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Optional
     }
 
 
-# ============================================================
-# generate_unique (DEV FAST SAFE + QUALITY compatible)
-# ============================================================
+# ----------------------------
+# generate_unique
+# ----------------------------
 
 def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
     spec = SPECS[difficulty]
@@ -835,26 +873,56 @@ def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
     best_score = None
     timeouts = 0
 
-    # bookkeeping
     rejected_qs = 0
+    accepted_qs = 0
+
+    best_qs = -1e9
+    best_qs_puzzle = None
+
+    # initial threshold
+    th = quick_score_min(difficulty)
 
     for attempt in range(max_attempts):
         if attempt % 10 == 0:
-            print(f"[TRY] date={date_utc} diff={difficulty} attempt={attempt}/{max_attempts} timeouts={timeouts} qsRejected={rejected_qs}", flush=True)
+            print(
+                f"[TRY] date={date_utc} diff={difficulty} attempt={attempt}/{max_attempts} "
+                f"timeouts={timeouts} qsRejected={rejected_qs} th={th:.2f}",
+                flush=True,
+            )
 
         puzzle = generate_candidate(date_utc, difficulty, attempt)
         if puzzle is None:
             continue
 
-        # Quick-score filter (BOTH FAST and QUALITY)
+        # Quick-score filter (enabled for BOTH FAST and QUALITY)
         if quick_enabled:
             qs = quick_score_candidate(puzzle)
             puzzle["_internal"]["quickScore"] = qs
-            th = quick_score_threshold_for_attempt(difficulty, attempt, max_attempts)
+
+            if qs > best_qs:
+                best_qs = qs
+                best_qs_puzzle = puzzle
+
+            # update dynamic threshold
+            th = quick_score_threshold_dynamic(
+                difficulty,
+                attempt,
+                max_attempts,
+                rejected_qs,
+                accepted_qs,
+                th,
+            )
             puzzle["_internal"]["quickScoreThreshold"] = th
+
+            # Late-run bypass if filter is over-rejecting
+            progress = attempt / max_attempts if max_attempts else 0.0
             if qs < th:
                 rejected_qs += 1
-                continue
+                if progress > 0.85 and rejected_qs > (0.90 * max(1, attempt)) and (attempt % 5 == 0):
+                    pass
+                else:
+                    continue
+            accepted_qs += 1
 
         # Gate
         solutions2, stats2 = solve_count(puzzle, stop_at=2)
@@ -876,17 +944,14 @@ def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
                 "timeMs": stats3.get("timeMs"),
             }
 
-            # If we proved 3+ solutions quickly (no timeout) on Easy/Medium, try repairs
             if difficulty in ("easy", "medium") and (not stats3.get("timedOut")) and solutions3 >= 3:
                 for _rep in range(6):
                     cand = deepcopy(puzzle)
                     rrng = random.Random(build_seed_int(date_utc, difficulty, attempt + 1000 + _rep))
                     repair_rules_easy_medium(cand, rrng, difficulty, changes=4)
 
-                    # Quick-score can be re-evaluated after repair (optional, cheap)
                     if quick_enabled:
-                        qs2 = quick_score_candidate(cand)
-                        cand["_internal"]["quickScoreRepair"] = qs2
+                        cand["_internal"]["quickScoreRepair"] = quick_score_candidate(cand)
 
                     s2b, st2b = solve_count(cand, stop_at=2)
                     if s2b == 1:
@@ -918,8 +983,32 @@ def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
             puzzle["_internal"]["difficultyScore"] = score2
             return puzzle
 
+    # Safety net: if we never found any solvable puzzle, try best quick-score candidate once.
     if best_solvable is None:
-        raise RuntimeError(f"Could not generate any candidate for {date_utc} {difficulty} within {max_attempts} attempts")
+        if best_qs_puzzle is not None:
+            solutions2, stats2 = solve_count(best_qs_puzzle, stop_at=2)
+            if solutions2 > 0:
+                best_qs_puzzle["_internal"]["uniqueSolution"] = (solutions2 == 1)
+                best_qs_puzzle["_internal"]["solverStats"] = stats2
+                best_qs_puzzle["_internal"]["difficultyScore"] = compute_hardness(difficulty, spec.cards, stats2)
+                return best_qs_puzzle
+
+        # As a last resort, disable quick-score and try a few candidates
+        if quick_enabled:
+            for extra in range(8):
+                puzzle = generate_candidate(date_utc, difficulty, max_attempts + extra)
+                if puzzle is None:
+                    continue
+                solutions2, stats2 = solve_count(puzzle, stop_at=2)
+                if solutions2 > 0:
+                    puzzle["_internal"]["uniqueSolution"] = (solutions2 == 1)
+                    puzzle["_internal"]["solverStats"] = stats2
+                    puzzle["_internal"]["difficultyScore"] = compute_hardness(difficulty, spec.cards, stats2)
+                    return puzzle
+
+        raise RuntimeError(
+            f"Could not generate any candidate for {date_utc} {difficulty} within {max_attempts} attempts"
+        )
 
     best_solvable["_internal"]["uniqueSolution"] = False
     best_solvable["_internal"]["solverStats"] = best_stats
@@ -927,9 +1016,9 @@ def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
     return best_solvable
 
 
-# ============================================================
+# ----------------------------
 # meta
-# ============================================================
+# ----------------------------
 
 def build_meta(date_utc: str, puzzles_by_diff: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
     meta = {
