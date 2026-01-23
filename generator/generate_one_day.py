@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 from datetime import datetime
 from typing import Dict, Any, List, Tuple, Optional
 
@@ -11,41 +12,22 @@ from .solver_unique import solve_count
 from .difficulty_score import compute_hardness
 
 # ------------------------------------------------------------
-# generate_one_day.py
+# generate_one_day.py (DEV FAST SAFE + Diagnostic Pass enabled)
 #
-# This generator module is used by generator.generate_range.
-#
-# Main solver call (recommended):
+# Main solver call (best practice):
 #   solutions2, stats2 = solve_count(puzzle, stop_at=2)
 #
-# Why stop_at=2?
-# - As soon as the solver finds a 2nd solution, the puzzle is NOT unique.
-# - Therefore stop-at-2 is the fastest correct uniqueness gate.
+# Diagnostic pass (enabled in this file):
+#   When solutions2 >= 2 (non-unique), we optionally run a cheap 2nd pass
+#   with stop_at=3 to tell apart "exactly 2" vs "3+" solutions.
 #
-# Optional DIAGNOSTIC (not required for gating):
-# If you want to distinguish "exactly 2" vs "3+" solutions for analytics/tuning,
-# you can run a *cheap* second pass ONLY when the first pass returns solutionsFound>=2:
+#   This DOES NOT change the uniqueness decision.
+#   - solutions2 == 1 => unique
+#   - solutions2 >= 2 => non-unique
 #
-#   # Diagnostic pass (keep it cheap!)
-#   solutions3, stats3 = solve_count(
-#       puzzle,
-#       stop_at=3,
-#       time_limit_override_sec=2.0,      # small budget so CI stays fast
-#       verbose_override=False,
-#       progress_every_override=10**9
-#   )
-#
-# Then store it e.g. in:
-#   puzzle['_internal']['solverDiag'] = {
-#       'stopAt': 3,
-#       'solutionsFound': solutions3,
-#       'timedOut': stats3.get('timedOut'),
-#       'timeMs': stats3.get('timeMs')
-#   }
-#
-# NOTE: This diagnostic does NOT change uniqueness:
-# - 2 solutions already means non-unique.
-# - The diagnostic is only to measure how "non-unique" the puzzle is.
+# Controls via environment variables:
+#   SOLVER_DIAG_ENABLED:   "true"/"false" (default: true)
+#   SOLVER_DIAG_TIME_LIMIT_SEC: float (default: 2.0)
 # ------------------------------------------------------------
 
 
@@ -351,10 +333,8 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
 def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
     """DEV FAST SAFE
 
-    Uses the *usual* main call:
-      solve_count(..., stop_at=2)
-
-    See header comment for optional diagnostic stop_at=3 approach.
+    - Uses stop_at=2 for gating (best practice).
+    - Runs an optional diagnostic stop_at=3 only when non-unique is detected.
     """
     spec = SPECS[difficulty]
 
@@ -363,6 +343,9 @@ def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
 
     max_attempts = attempt_caps.get(difficulty, 60)
     max_timeouts = timeout_caps.get(difficulty, 6)
+
+    diag_enabled = os.getenv("SOLVER_DIAG_ENABLED", "true").lower() == "true"
+    diag_time_limit = float(os.getenv("SOLVER_DIAG_TIME_LIMIT_SEC", "2.0"))
 
     best_solvable = None
     best_stats = None
@@ -378,6 +361,24 @@ def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
 
         # MAIN CALL (Best practice): stop_at=2
         solutions2, stats2 = solve_count(puzzle, stop_at=2)
+
+        # Optional diagnostic for non-unique cases
+        solver_diag = None
+        if diag_enabled and solutions2 >= 2:
+            solutions3, stats3 = solve_count(
+                puzzle,
+                stop_at=3,
+                time_limit_override_sec=diag_time_limit,
+                verbose_override=False,
+                progress_every_override=10**9,
+            )
+            solver_diag = {
+                "stopAt": 3,
+                "solutionsFound": solutions3,
+                "timedOut": stats3.get("timedOut"),
+                "timeMs": stats3.get("timeMs"),
+            }
+        puzzle["_internal"]["solverDiag"] = solver_diag
 
         if stats2.get("timedOut"):
             timeouts += 1
@@ -399,8 +400,7 @@ def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
             puzzle["_internal"]["difficultyScore"] = score2
             return puzzle
 
-        # Non-unique in FAST mode: keep looking for a unique one within caps
-        # (No diagnostic executed here; see header comment.)
+        # Non-unique: keep trying within caps
 
     # fallback
     if best_solvable is None:
@@ -436,6 +436,7 @@ def build_meta(date_utc: str, puzzles_by_diff: Dict[str, Dict[str, Any]]) -> Dic
         spec = SPECS[diff]
         stats = puzzle["_internal"].get("solverStats", {})
         score = puzzle["_internal"].get("difficultyScore", {})
+        diag = puzzle["_internal"].get("solverDiag")
         unique_flag = puzzle["_internal"].get("uniqueSolution", False)
 
         public_puzzle = {k: v for k, v in puzzle.items() if k != "_internal"}
@@ -462,6 +463,7 @@ def build_meta(date_utc: str, puzzles_by_diff: Dict[str, Dict[str, Any]]) -> Dic
                     "timedOut": stats.get("timedOut"),
                     "timeLimitSec": stats.get("timeLimitSec"),
                 },
+                "diagnostic": diag,
             },
             "difficultyScore": score,
             "hash": {"puzzleJson": puzzle_hash},
