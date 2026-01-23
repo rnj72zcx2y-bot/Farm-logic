@@ -53,13 +53,13 @@
     "hard": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 5856.67,
+          "btPerCard": 7944.25,
           "maxDepth": 19,
           "mu": 0.85,
-          "nvPerCard": 7200.83,
-          "raw": 3.649,
+          "nvPerCard": 9707.5,
+          "raw": 3.7794,
           "sigma": 0.25,
-          "tPerCardMs": 625.0
+          "tPerCardMs": 833.33
         },
         "hardness01": 1.0,
         "passedBand": false,
@@ -86,12 +86,12 @@
           "timedOut": true
         },
         "stats": {
-          "backtracks": 140560,
+          "backtracks": 190662,
           "maxDepth": 19,
-          "nodesVisited": 172820,
+          "nodesVisited": 232980,
           "solutionsFound": 2,
-          "timeLimitSec": 15.0,
-          "timeMs": 15000,
+          "timeLimitSec": 20.0,
+          "timeMs": 20000,
           "timedOut": true
         },
         "stopAt": 2,
@@ -102,13 +102,13 @@
     "medium": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 26568.8,
+          "btPerCard": 33035.73,
           "maxDepth": 14,
           "mu": 0.85,
-          "nvPerCard": 34415.47,
-          "raw": 4.2036,
+          "nvPerCard": 42903.27,
+          "raw": 4.2989,
           "sigma": 0.25,
-          "tPerCardMs": 533.33
+          "tPerCardMs": 666.67
         },
         "hardness01": 1.0,
         "passedBand": false,
@@ -135,12 +135,12 @@
           "timedOut": true
         },
         "stats": {
-          "backtracks": 398532,
+          "backtracks": 495536,
           "maxDepth": 14,
-          "nodesVisited": 516232,
+          "nodesVisited": 643549,
           "solutionsFound": 2,
-          "timeLimitSec": 8.0,
-          "timeMs": 8000,
+          "timeLimitSec": 10.0,
+          "timeMs": 10000,
           "timedOut": true
         },
         "stopAt": 2,
@@ -149,9 +149,9 @@
       "uniqueSolution": false
     }
   },
-  "generatedAtUtc": "2026-01-23T07:15:04Z",
+  "generatedAtUtc": "2026-01-23T07:46:02Z",
   "generatorVersion": "1.0.0",
-  "gitCommit": "4c6b602",
+  "gitCommit": "53f94a7",
   "notes": {
     "animals": [
       "Chicken",
