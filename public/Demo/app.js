@@ -39,10 +39,14 @@ function toast(msg, kind='info'){
 }
 
 function apiUrl(path){
-  // Works for GitHub Pages under a repo subpath, because it is relative to current URL.
-  return new URL(path.replace(/^\//,''), window.location.href).toString();
-}
+  // Project pages root: https://<user>.github.io/<repo>/
+  const seg = window.location.pathname.split('/').filter(Boolean);
+  const repoRoot = (seg.length >= 1) ? `/${seg[0]}/` : '/';
+  const base = window.location.origin + repoRoot;
 
+  // keep inside repo by stripping leading slash
+  return new URL(path.replace(/^\/+/, ''), base).toString();
+}
 async function fetchJson(path){
   const res = await fetch(apiUrl(path), { cache: 'no-store' });
   if(!res.ok) throw new Error(`HTTP ${res.status} for ${path}`);
