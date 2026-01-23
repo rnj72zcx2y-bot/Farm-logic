@@ -31,7 +31,7 @@ jobs:
       - name: Generate
         env:
           GLOBAL_SALT: ${{ secrets.GLOBAL_SALT }}
-        run: python -m generator.generate_range --days ${{ inputs.days }} --timezone UTC
+        run: python -u -m generator.generate_range --days ${{ inputs.days }} --timezone UTC
 
       - name: Commit & push
         run: |
