@@ -1,4 +1,4 @@
-name: Generate Daily Puzzles (DEV fast)
+name: DEV fast
 
 on:
   workflow_dispatch:
