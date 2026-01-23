@@ -30,6 +30,12 @@
       },
       "seed": "sha256:29653770b0bb713c530367101c9b57250de72ba88d52f8b0934e6b43964b8ba0",
       "solver": {
+        "diagnostic": {
+          "solutionsFound": 3,
+          "stopAt": 3,
+          "timeMs": 0,
+          "timedOut": false
+        },
         "stats": {
           "backtracks": 15,
           "maxDepth": 6,
@@ -47,11 +53,11 @@
     "hard": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 5819.92,
+          "btPerCard": 5856.67,
           "maxDepth": 19,
           "mu": 0.85,
-          "nvPerCard": 7154.25,
-          "raw": 3.6466,
+          "nvPerCard": 7200.83,
+          "raw": 3.649,
           "sigma": 0.25,
           "tPerCardMs": 625.0
         },
@@ -73,10 +79,16 @@
       },
       "seed": "sha256:ebe5bca6af19b61b6e98e6a8dc067b3d36eb4a7b022a93412a8c1815a1e89db5",
       "solver": {
+        "diagnostic": {
+          "solutionsFound": 2,
+          "stopAt": 3,
+          "timeMs": 2000,
+          "timedOut": true
+        },
         "stats": {
-          "backtracks": 139678,
+          "backtracks": 140560,
           "maxDepth": 19,
-          "nodesVisited": 171702,
+          "nodesVisited": 172820,
           "solutionsFound": 2,
           "timeLimitSec": 15.0,
           "timeMs": 15000,
@@ -90,11 +102,11 @@
     "medium": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 25430.8,
+          "btPerCard": 26568.8,
           "maxDepth": 14,
           "mu": 0.85,
-          "nvPerCard": 32925.13,
-          "raw": 4.1874,
+          "nvPerCard": 34415.47,
+          "raw": 4.2036,
           "sigma": 0.25,
           "tPerCardMs": 533.33
         },
@@ -116,10 +128,16 @@
       },
       "seed": "sha256:8d08f23cf870cb47ae15ce082a97ca1cc2561536d80cb89dc3773a245613b5df",
       "solver": {
+        "diagnostic": {
+          "solutionsFound": 2,
+          "stopAt": 3,
+          "timeMs": 2000,
+          "timedOut": true
+        },
         "stats": {
-          "backtracks": 381462,
+          "backtracks": 398532,
           "maxDepth": 14,
-          "nodesVisited": 493877,
+          "nodesVisited": 516232,
           "solutionsFound": 2,
           "timeLimitSec": 8.0,
           "timeMs": 8000,
@@ -131,9 +149,9 @@
       "uniqueSolution": false
     }
   },
-  "generatedAtUtc": "2026-01-23T06:30:05Z",
+  "generatedAtUtc": "2026-01-23T07:15:04Z",
   "generatorVersion": "1.0.0",
-  "gitCommit": "055ae1f",
+  "gitCommit": "4c6b602",
   "notes": {
     "animals": [
       "Chicken",
