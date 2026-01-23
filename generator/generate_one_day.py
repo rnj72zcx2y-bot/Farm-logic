@@ -11,14 +11,12 @@ from .solver_unique import solve_count
 from .difficulty_score import compute_hardness
 
 # ------------------------------------------------------------
-# UNIQUENESS-FIRST (STRICT)
-# - No fallback to non-unique puzzles.
-# - Keeps region counts (easy/medium/hard) as defined in SPECS.
-# - Enforces tight region sizes to strengthen constraints:
-#     easy: 4 regions -> size 3 each
-#     medium: 10 regions -> size 3 each
-#     hard: 16 regions -> size 3 each (exact)
-# - Prefers strong rules, uses uniqueSpecies only when it is truly strong.
+# DEV FAST SAFE
+# Goal: NEVER appear to hang.
+# - Strict attempt caps per difficulty
+# - Extra progress prints from generate_unique()
+# - Early bailout on repeated solver timeouts
+# - Always returns a solvable puzzle if found; uniqueness is a bonus in FAST mode
 # ------------------------------------------------------------
 
 
@@ -46,7 +44,6 @@ def neighbors(cell: Tuple[int, int], rows: int, cols: int) -> List[Tuple[int, in
 
 
 def make_simple_active_shape(difficulty: str, rows: int, cols: int) -> List[List[int]]:
-    """Deterministic domino-tileable shapes (still dev stable)."""
     active: List[List[int]] = []
     if difficulty == "easy":
         for r in range(rows):
@@ -78,7 +75,6 @@ def make_blockers(rows: int, cols: int, active_cells: List[List[int]], rng: rand
 
 
 def bipartite_matching_tiling(active_cells: List[Tuple[int, int]]) -> List[Tuple[Tuple[int, int], Tuple[int, int]]]:
-    """Return one domino tiling as list of cell pairs using bipartite matching."""
     U = [cell for cell in active_cells if (cell[0] + cell[1]) % 2 == 0]
     V = [cell for cell in active_cells if (cell[0] + cell[1]) % 2 == 1]
 
@@ -116,44 +112,41 @@ def bipartite_matching_tiling(active_cells: List[Tuple[int, int]]) -> List[Tuple
     return pairs
 
 
-def partition_regions_exact(active_cells: List[Tuple[int, int]], region_count: int, rows: int, cols: int,
-                            rng: random.Random, target_size: int) -> List[List[List[int]]]:
-    """Partition into regions of exact target_size (best effort, dev heuristic).
-
-    With our fixed counts, we can set:
-      easy: 12 cells / 4 regions = 3
-      medium: 30 / 10 = 3
-      hard: 48 / 16 = 3
-    """
+def partition_regions(active_cells: List[Tuple[int, int]], region_count: int, rows: int, cols: int,
+                      rng: random.Random, min_size: int, max_size: int) -> List[List[List[int]]]:
     active_set = set(active_cells)
-    # seeds
-    seeds = rng.sample(active_cells, k=region_count)
+    seeds = rng.sample(active_cells, k=min(region_count, len(active_cells)))
     regions = [set([s]) for s in seeds]
     unassigned = active_set - set(seeds)
 
     frontiers = [set([s]) for s in seeds]
     while unassigned:
-        # choose region that is not full
-        candidates = [i for i in range(region_count) if len(regions[i]) < target_size]
-        if not candidates:
-            break
-        i = rng.choice(candidates)
+        expandable = []
+        for i, fr in enumerate(frontiers):
+            if len(regions[i]) >= max_size:
+                continue
+            for cell in fr:
+                for nb in neighbors(cell, rows, cols):
+                    if nb in unassigned:
+                        expandable.append(i)
+                        break
+                if i in expandable:
+                    break
 
-        # find neighbors to expand
+        if not expandable:
+            for cell in list(unassigned):
+                i = min(range(len(regions)), key=lambda k: len(regions[k]))
+                regions[i].add(cell)
+                unassigned.remove(cell)
+            break
+
+        i = rng.choice(expandable)
         cand = set()
         for cell in frontiers[i]:
             for nb in neighbors(cell, rows, cols):
                 if nb in unassigned:
                     cand.add(nb)
         if not cand:
-            # reset frontier to all region cells and try again
-            frontiers[i] = set(regions[i])
-            for cell in frontiers[i]:
-                for nb in neighbors(cell, rows, cols):
-                    if nb in unassigned:
-                        cand.add(nb)
-        if not cand:
-            # cannot expand this region, try a different one
             continue
 
         nb = rng.choice(list(cand))
@@ -161,38 +154,27 @@ def partition_regions_exact(active_cells: List[Tuple[int, int]], region_count: i
         unassigned.remove(nb)
         frontiers[i].add(nb)
 
-        if len(frontiers[i]) > 12:
-            frontiers[i] = set(rng.sample(list(frontiers[i]), min(6, len(frontiers[i]))))
-
-    # assign any leftovers to regions with space
-    for cell in list(unassigned):
-        spots = [i for i in range(region_count) if len(regions[i]) < target_size]
-        if not spots:
-            spots = list(range(region_count))
-        i = rng.choice(spots)
-        regions[i].add(cell)
-        unassigned.remove(cell)
+        if len(frontiers[i]) > 18:
+            frontiers[i] = set(rng.sample(list(frontiers[i]), 9))
 
     return [[[r, c] for (r, c) in sorted(reg)] for reg in regions]
 
 
 def pick_animals_for_card(rng: random.Random, difficulty: str) -> Tuple[Optional[str], Optional[str]]:
-    """Return (a,b) where values are animal names or None (empty)."""
-    # Keep empties low for uniqueness
-    empty_p = {"easy": 0.08, "medium": 0.06, "hard": 0.04}[difficulty]
+    empty_p = {"easy": 0.10, "medium": 0.06, "hard": 0.04}[difficulty]
     names = [a for a, _legs in ANIMALS]
 
     weights = []
     for n in names:
         if n in ("Dog", "Cat", "Cow", "Horse"):
-            weights.append(0.9)  # many 4-leggers create symmetry
-        elif n in ("Chicken",):
+            weights.append(0.9)
+        elif n == "Chicken":
             weights.append(1.2)
-        elif n in ("Bee",):
+        elif n == "Bee":
             weights.append(1.0)
-        elif n in ("Spider",):
+        elif n == "Spider":
             weights.append(1.05 if difficulty == "hard" else 0.9)
-        elif n in ("Snail",):
+        elif n == "Snail":
             weights.append(0.9)
         else:
             weights.append(1.0)
@@ -202,7 +184,6 @@ def pick_animals_for_card(rng: random.Random, difficulty: str) -> Tuple[Optional
             return None
         return rng.choices(names, weights=weights, k=1)[0]
 
-    # avoid None/None
     for _ in range(8):
         a, b = sample_one(), sample_one()
         if not (a is None and b is None):
@@ -222,7 +203,6 @@ def legs_of(animal: Optional[str]) -> int:
 def choose_rule_for_region(rng: random.Random, difficulty: str,
                            region_cells: List[Tuple[int, int]],
                            cell_animal: Dict[Tuple[int, int], Optional[str]]) -> Dict[str, Any]:
-    """Strong rules for uniqueness-first."""
     animals = [cell_animal[c] for c in region_cells]
     legs_sum = sum(legs_of(a) for a in animals)
     animal_count = sum(1 for a in animals if a is not None)
@@ -232,16 +212,15 @@ def choose_rule_for_region(rng: random.Random, difficulty: str,
 
     strong_unique_ok = (len(region_cells) >= 3) and (not has_empty) and (len(species) == len(region_cells)) and (len(set(species)) == len(species))
 
-    # with size=3 regions, uniqueSpecies is very strong if no empties
-    if difficulty == "hard":
-        choices = ["unique", "legs_eq", "animals_eq"]
-        weights = [0.55, 0.25, 0.20]
+    if difficulty == "easy":
+        choices = ["legs_eq", "animals_eq", "unique"]
+        weights = [0.6, 0.35, 0.05]
     elif difficulty == "medium":
         choices = ["legs_eq", "animals_eq", "unique"]
-        weights = [0.45, 0.35, 0.20]
+        weights = [0.5, 0.33, 0.17]
     else:
-        choices = ["legs_eq", "animals_eq", "unique"]
-        weights = [0.55, 0.40, 0.05]
+        choices = ["unique", "legs_eq", "animals_eq"]
+        weights = [0.55, 0.25, 0.20]
 
     filtered, filtered_w = [], []
     for ch, w in zip(choices, weights):
@@ -261,7 +240,6 @@ def choose_rule_for_region(rng: random.Random, difficulty: str,
         return {"type": "animals", "op": "=", "value": animal_count}
     if rule_type == "unique":
         return {"type": "uniqueSpecies"}
-
     return {"type": "legs", "op": "=", "value": legs_sum}
 
 
@@ -274,10 +252,8 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
     active = [tuple(x) for x in active_ll]
 
     blocked = make_blockers(rows, cols, active_ll, rng)
-
     pairs = bipartite_matching_tiling(active)
 
-    # reduce duplicate card pairs (symmetry)
     max_dupes = {"easy": 2, "medium": 1, "hard": 1}[difficulty]
     pair_counts: Dict[Tuple[str, str], int] = {}
 
@@ -286,7 +262,7 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
 
     cards = []
     for i in range(spec.cards):
-        for _ in range(60):
+        for _ in range(50):
             a, b = pick_animals_for_card(rng, difficulty)
             key = tuple(sorted([(a or "_"), (b or "_")]))
             pair_counts[key] = pair_counts.get(key, 0) + 1
@@ -297,7 +273,6 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
         else:
             cards.append({"id": f"C{i+1:02d}", "fence": fences[i], "a": "Snail", "b": None})
 
-    # hidden assignment
     rng.shuffle(pairs)
     cell_animal: Dict[Tuple[int, int], Optional[str]] = {}
     for i, (u, v) in enumerate(pairs[:spec.cards]):
@@ -312,9 +287,14 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
     for c in active:
         cell_animal.setdefault(c, None)
 
-    # Exact size regions (3) with fixed region count
-    target_size = 3
-    region_cells_ll = partition_regions_exact(active, spec.regions, rows, cols, rng, target_size=target_size)
+    if difficulty == "hard":
+        min_size, max_size = 3, 4
+    elif difficulty == "medium":
+        min_size, max_size = 2, 4
+    else:
+        min_size, max_size = 2, 5
+
+    region_cells_ll = partition_regions(active, spec.regions, rows, cols, rng, min_size=min_size, max_size=max_size)
 
     regions = []
     for idx, cell_list in enumerate(region_cells_ll):
@@ -334,24 +314,60 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
     }
 
 
-def generate_unique(date_utc: str, difficulty: str, max_attempts: int = 8000) -> Dict[str, Any]:
-    """Strict: require uniqueness (solutionsFound==1)."""
+def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
+    """FAST safe: bounded attempts, always progress logs."""
     spec = SPECS[difficulty]
 
+    attempt_caps = {"easy": 120, "medium": 40, "hard": 60}
+    timeout_caps = {"easy": 10, "medium": 6, "hard": 10}
+
+    max_attempts = attempt_caps.get(difficulty, 60)
+    max_timeouts = timeout_caps.get(difficulty, 6)
+
+    best_solvable = None
+    best_stats = None
+    best_score = None
+
+    timeouts = 0
+
     for attempt in range(max_attempts):
+        if attempt % 10 == 0:
+            print(f"[TRY] date={date_utc} diff={difficulty} attempt={attempt}/{max_attempts} timeouts={timeouts}", flush=True)
+
         puzzle = generate_candidate(date_utc, difficulty, attempt)
         solutions, stats = solve_count(puzzle, stop_at=2)
-        if solutions != 1:
+
+        if stats.get("timedOut"):
+            timeouts += 1
+            if timeouts >= max_timeouts and best_solvable is not None:
+                print(f"[TRY] date={date_utc} diff={difficulty} too many timeouts -> fallback", flush=True)
+                break
+
+        if solutions <= 0:
             continue
 
         score = compute_hardness(difficulty, spec.cards, stats)
 
-        puzzle["_internal"]["uniqueSolution"] = True
-        puzzle["_internal"]["solverStats"] = stats
-        puzzle["_internal"]["difficultyScore"] = score
-        return puzzle
+        if best_solvable is None:
+            best_solvable, best_stats, best_score = puzzle, stats, score
 
-    raise RuntimeError(f"Could not generate unique puzzle for {date_utc} {difficulty} within {max_attempts} attempts")
+        if solutions == 1:
+            puzzle["_internal"]["uniqueSolution"] = True
+            puzzle["_internal"]["solverStats"] = stats
+            puzzle["_internal"]["difficultyScore"] = score
+            return puzzle
+
+    # fallback
+    if best_solvable is None:
+        print(f"[TRY] date={date_utc} diff={difficulty} no solvable candidate found -> forced fallback", flush=True)
+        best_solvable = generate_candidate(date_utc, difficulty, 0)
+        best_stats = {"type": "CSP-backtracking", "stopAt": 2, "solutionsFound": 0, "nodesVisited": 0, "backtracks": 0, "maxDepth": 0, "timeMs": 0, "timedOut": False}
+        best_score = {"hardness01": 0.0, "passedBand": False}
+
+    best_solvable["_internal"]["uniqueSolution"] = False
+    best_solvable["_internal"]["solverStats"] = best_stats
+    best_solvable["_internal"]["difficultyScore"] = best_score
+    return best_solvable
 
 
 def build_meta(date_utc: str, puzzles_by_diff: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
