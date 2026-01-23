@@ -330,14 +330,13 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
     }
 
 
-def generate_unique(date_utc: str, difficulty: str, max_attempts: int = 1200) -> Dict[str, Any]:
-    """Stage-2: Generate a uniquely solvable puzzle AND within hardness band.
+def generate_unique(date_utc: str, difficulty: str, max_attempts: int = 2000) -> Dict[str, Any]:
+    """DEV-STABLE: Require unique solution, but DO NOT gate on hardness yet.
 
-    - Requires solve_count to implement Stop-at-2 real CSP
-    - Accept only solutionsFound == 1
-    - Enforce hardness target band
+    Accept only:
+      - solve_count(...stop_at=2) returns solutionsFound == 1
 
-    NOTE: max_attempts is higher to avoid random failures.
+    Still compute and store hardness score for monitoring.
     """
     spec = SPECS[difficulty]
 
@@ -349,15 +348,14 @@ def generate_unique(date_utc: str, difficulty: str, max_attempts: int = 1200) ->
             continue
 
         score = compute_hardness(difficulty, spec.cards, stats)
-        if not score.get("passedBand", False):
-            continue
+        # NOTE: do not filter by score in dev-stable mode
 
         puzzle["_internal"]["uniqueSolution"] = True
         puzzle["_internal"]["solverStats"] = stats
         puzzle["_internal"]["difficultyScore"] = score
         return puzzle
 
-    raise RuntimeError(f"Could not generate uniquely solvable puzzle in hardness band for {date_utc} {difficulty}")
+    raise RuntimeError(f"Could not generate uniquely solvable puzzle for {date_utc} {difficulty} within {max_attempts} attempts")
 
 
 def build_meta(date_utc: str, puzzles_by_diff: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
