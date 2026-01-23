@@ -12,6 +12,7 @@ SPECIES_ID = {name: i for i, name in enumerate(SPECIES)}
 
 
 def _feasible_domino_tiling(active_cells: List[Tuple[int, int]]) -> bool:
+    """Quick feasibility: perfect matching exists."""
     n = len(active_cells)
     if n % 2 == 1:
         return False
@@ -38,6 +39,7 @@ def _feasible_domino_tiling(active_cells: List[Tuple[int, int]]) -> bool:
 
 
 def _domino_edges(active_cells: List[Tuple[int, int]]) -> Tuple[List[Tuple[int, int]], List[List[int]]]:
+    """Return adjacency edges between active cells, plus edges-by-cell index."""
     cell_to_idx = {cell: i for i, cell in enumerate(active_cells)}
     edges: List[Tuple[int, int]] = []
     edges_by_cell: List[List[int]] = [[] for _ in range(len(active_cells))]
@@ -84,15 +86,20 @@ def solve_count(
 ) -> Tuple[int, Dict[str, Any]]:
     """CSP solver with Stop-at-N and optional time-limit override.
 
-    - stop_at=2 is best practice for uniqueness gating (as soon as 2 solutions exist => not unique).
-    - time_limit_override_sec can be used for cheap diagnostic second pass (e.g., stop_at=3, time_limit=2s).
+    Best practice:
+      - Use stop_at=2 for uniqueness gating (fast and correct).
+    Optional:
+      - Use stop_at=3 with a small time_limit_override_sec for diagnostic purposes.
 
-    Env vars (defaults):
+    Environment defaults:
       SOLVER_VERBOSE=true|false
       SOLVER_PROGRESS_EVERY=20000
       SOLVER_TIME_LIMIT_EASY=5
       SOLVER_TIME_LIMIT_MEDIUM=15
       SOLVER_TIME_LIMIT_HARD=25
+
+    Returns:
+      solutionsFound in {0..stop_at}, where stop_at means "stop_at or more".
     """
     t0 = time.time()
 
@@ -403,7 +410,8 @@ def solve_count(
     dfs(0)
 
     sf = solutions if solutions < stop_at else stop_at
-    # if timed out and didn't reach 2, treat as non-unique
+
+    # If timed out and did not reach 2 solutions, treat as non-unique/unknown for gating
     if timed_out and sf < 2:
         sf = min(stop_at, 2)
 
