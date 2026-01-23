@@ -37,7 +37,7 @@ jobs:
           SOLVER_VERBOSE: "true"
           SOLVER_PROGRESS_EVERY: "20000"
           SOLVER_TIME_LIMIT_EASY: "4"
-          SOLVER_TIME_LIMIT_MEDIUM: "10"
+          SOLVER_TIME_LIMIT_MEDIUM: "8"
           SOLVER_TIME_LIMIT_HARD: "15"
         run: |
           DAYS="${{ inputs.days }}"
