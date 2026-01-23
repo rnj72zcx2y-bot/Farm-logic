@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Farm-logic – Daily Demo</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">🐾</div>
+      <div>
+        <div class="title">Farm‑logic</div>
+        <div class="subtitle">Daily Demo (MVP)</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="control">
+        <label for="difficulty">Difficulty</label>
+        <select id="difficulty">
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+
+      <button id="btnLoad" class="btn primary">Load today</button>
+      <button id="btnCheck" class="btn">Check</button>
+      <button id="btnReset" class="btn danger">Reset</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel left">
+      <div class="panelHeader">
+        <h2>Board</h2>
+        <div class="meta" id="metaLine">—</div>
+      </div>
+
+      <div class="boardWrap">
+        <div id="board" class="board" aria-label="Puzzle board"></div>
+      </div>
+
+      <div class="help">
+        <div class="hint"><b>How to play:</b> Click a card → click two adjacent active cells to place it. Use <b>Flip</b> if needed.</div>
+        <div class="hint">Tip: If you misplace a card, click it in the list on the right and choose <b>Remove</b>.</div>
+      </div>
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="panel right">
+      <div class="panelHeader">
+        <h2>Cards</h2>
+        <div class="row">
+          <button id="btnFlip" class="btn" title="Flip selected card">Flip</button>
+          <span id="selInfo" class="meta">No card selected</span>
+        </div>
+      </div>
+
+      <div class="cards" id="cards"></div>
+
+      <hr class="sep" />
+
+      <div class="panelHeader">
+        <h2>Regions & Rules</h2>
+        <div class="meta">Click <b>Check</b> to validate</div>
+      </div>
+      <div id="rules" class="rules"></div>
+
+      <hr class="sep" />
+
+      <div class="panelHeader">
+        <h2>Placed</h2>
+        <div class="meta" id="placedCount">0 / 0</div>
+      </div>
+      <div id="placed" class="placed"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Loads <code>api/today.json</code> and daily puzzle JSONs from your <code>public/api</code>.</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
