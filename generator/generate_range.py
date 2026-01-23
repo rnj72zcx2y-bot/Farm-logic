@@ -13,29 +13,41 @@ def iso_date(d) -> str:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--days", type=int, default=30)
+    ap.add_argument("--days", type=int, default=3)
     ap.add_argument("--timezone", default="UTC")
+    ap.add_argument("--verbose", action="store_true", help="Print progress logs")
     args = ap.parse_args()
 
+    # Global daily: UTC date
     today = datetime.now(timezone.utc).date()
     available_through = today + timedelta(days=args.days - 1)
+
+    diffs = ("easy", "medium", "hard")
 
     for offset in range(args.days):
         d = today + timedelta(days=offset)
         date_utc = iso_date(d)
 
-        puzzles = {
-            "easy": generate_unique(date_utc, "easy"),
-            "medium": generate_unique(date_utc, "medium"),
-            "hard": generate_unique(date_utc, "hard"),
-        }
+        if args.verbose:
+            print(f"[GEN] date={date_utc} start", flush=True)
+
+        puzzles = {}
+        for diff in diffs:
+            if args.verbose:
+                print(f"[GEN] date={date_utc} diff={diff} ...", flush=True)
+            puzzles[diff] = generate_unique(date_utc, diff)
+            if args.verbose:
+                print(f"[GEN] date={date_utc} diff={diff} ✓", flush=True)
 
         meta = build_meta(date_utc, puzzles)
         base_dir = f"public/api/daily/{date_utc}"
 
         write_json(f"{base_dir}/meta.json", meta)
-        for diff in ("easy", "medium", "hard"):
+        for diff in diffs:
             write_json(f"{base_dir}/{diff}.json", strip_internal(puzzles[diff]))
+
+        if args.verbose:
+            print(f"[GEN] date={date_utc} written", flush=True)
 
     today_str = iso_date(today)
     write_json("public/api/today.json", {
@@ -59,6 +71,9 @@ def main():
         "generatorVersion": GENERATOR_VERSION,
         "gitCommit": GIT_COMMIT
     })
+
+    if args.verbose:
+        print(f"[GEN] done. availableThroughUtc={iso_date(available_through)}", flush=True)
 
 
 if __name__ == "__main__":
