@@ -1,12 +1,12 @@
 {
-  "dateUtc": "2026-01-22",
+  "dateUtc": "2026-01-23",
   "generatorVersion": "1.0.0",
-  "gitCommit": "763cc48",
+  "gitCommit": "492d7cb",
   "paths": {
-    "easy": "/api/daily/2026-01-22/easy.json",
-    "hard": "/api/daily/2026-01-22/hard.json",
-    "medium": "/api/daily/2026-01-22/medium.json",
-    "meta": "/api/daily/2026-01-22/meta.json"
+    "easy": "/api/daily/2026-01-23/easy.json",
+    "hard": "/api/daily/2026-01-23/hard.json",
+    "medium": "/api/daily/2026-01-23/medium.json",
+    "meta": "/api/daily/2026-01-23/meta.json"
   },
   "schemaVersion": 1
 }
