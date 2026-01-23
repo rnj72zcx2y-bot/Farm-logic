@@ -1,0 +1,53 @@
+name: Generate Daily Puzzles (DEV stable)
+
+on:
+  schedule:
+    - cron: "10 0 * * *"  # 00:10 UTC
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Days ahead to generate (dev default: 3)"
+        required: false
+        default: "3"
+      verbose:
+        description: "Enable progress logs"
+        required: false
+        default: "true"
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install -r generator/requirements.txt
+
+      - name: Generate
+        env:
+          GLOBAL_SALT: ${{ secrets.GLOBAL_SALT }}
+        run: |
+          DAYS=${{ inputs.days }}
+          VERBOSE=${{ inputs.verbose }}
+          if [ "$VERBOSE" = "true" ]; then
+            python -u -m generator.generate_range --days $DAYS --timezone UTC --verbose
+          else
+            python -u -m generator.generate_range --days $DAYS --timezone UTC
+          fi
+
+      - name: Commit & push
+        run: |
+          git config user.name "daily-bot"
+          git config user.email "daily-bot@users.noreply.github.com"
+          git add public/api/daily public/api/today.json public/api/latest.json
+          git commit -m "Daily puzzles DEV $(date -u +%F)" || exit 0
+          git push
