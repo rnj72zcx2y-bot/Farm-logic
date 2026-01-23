@@ -1,0 +1,56 @@
+name: Generate Daily Puzzles (DEV fast)
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Days ahead to generate (fast default: 1)"
+        required: false
+        default: "1"
+      verbose:
+        description: "(Ignored) Generator logs are always enabled in this workflow"
+        required: false
+        default: "true"
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install -r generator/requirements.txt
+
+      - name: Generate
+        env:
+          GLOBAL_SALT: ${{ secrets.GLOBAL_SALT }}
+
+          # Solver logs & time limits (keep CI responsive)
+          SOLVER_VERBOSE: "true"
+          SOLVER_PROGRESS_EVERY: "5000"
+          SOLVER_TIME_LIMIT_EASY: "4"
+          SOLVER_TIME_LIMIT_MEDIUM: "8"
+          SOLVER_TIME_LIMIT_HARD: "15"
+        run: |
+          DAYS="${{ inputs.days }}"
+          echo "[WF] days=$DAYS (generator verbose=always on)"
+          # Always unbuffered (-u) and always with --verbose so logs stream live
+          python -u -m generator.generate_range --days "$DAYS" --timezone UTC --verbose
+
+      - name: Commit & push
+        run: |
+          git config user.name "daily-bot"
+          git config user.email "daily-bot@users.noreply.github.com"
+          git add public/api/daily public/api/today.json public/api/latest.json
+          git commit -m "Daily puzzles DEV fast $(date -u +%F)" || exit 0
+          git push
