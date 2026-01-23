@@ -54,13 +54,13 @@
     "hard": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 4924.12,
-          "maxDepth": 15,
+          "btPerCard": 44407.33,
+          "maxDepth": 24,
           "mu": 0.85,
-          "nvPerCard": 9971.08,
-          "raw": 3.6687,
+          "nvPerCard": 89624.25,
+          "raw": 4.6347,
           "sigma": 0.25,
-          "tPerCardMs": 833.33
+          "tPerCardMs": 8957.79
         },
         "hardness01": 1.0,
         "passedBand": false,
@@ -88,13 +88,13 @@
           "timedOut": true
         },
         "stats": {
-          "backtracks": 118179,
-          "maxDepth": 15,
-          "nodesVisited": 239306,
+          "backtracks": 1065776,
+          "maxDepth": 24,
+          "nodesVisited": 2150982,
           "solutionsFound": 2,
-          "timeLimitSec": 20.0,
-          "timeMs": 20000,
-          "timedOut": true
+          "timeLimitSec": 245.0,
+          "timeMs": 214987,
+          "timedOut": false
         },
         "stopAt": 2,
         "type": "CSP-backtracking"
@@ -104,15 +104,15 @@
     "medium": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 1177.0,
+          "btPerCard": 225.4,
           "maxDepth": 15,
           "mu": 0.85,
-          "nvPerCard": 1661.87,
-          "raw": 2.8717,
+          "nvPerCard": 320.4,
+          "raw": 2.1794,
           "sigma": 0.25,
-          "tPerCardMs": 26.67
+          "tPerCardMs": 6.6
         },
-        "hardness01": 0.9997,
+        "hardness01": 0.9951,
         "passedBand": false,
         "targetBand": [
           0.45,
@@ -127,23 +127,23 @@
         "rows": 6
       },
       "hash": {
-        "puzzleJson": "sha256:e986a8d4f1fc70e07d7bf880bfcc9f36108631223110cc944c7bc66b94fa8ecb"
+        "puzzleJson": "sha256:0c80dbc941ba802f6d57118830f127e26bdc51e16a502a3204e1b4cd6a974f77"
       },
       "seed": "sha256:8d08f23cf870cb47ae15ce082a97ca1cc2561536d80cb89dc3773a245613b5df",
       "solver": {
         "diagnostic": {
           "solutionsFound": 3,
           "stopAt": 3,
-          "timeMs": 395,
+          "timeMs": 96,
           "timedOut": false
         },
         "stats": {
-          "backtracks": 17655,
+          "backtracks": 3381,
           "maxDepth": 15,
-          "nodesVisited": 24928,
+          "nodesVisited": 4806,
           "solutionsFound": 2,
           "timeLimitSec": 10.0,
-          "timeMs": 400,
+          "timeMs": 99,
           "timedOut": false
         },
         "stopAt": 2,
@@ -152,9 +152,9 @@
       "uniqueSolution": false
     }
   },
-  "generatedAtUtc": "2026-01-23T15:01:28Z",
+  "generatedAtUtc": "2026-01-23T16:01:27Z",
   "generatorVersion": "1.0.0",
-  "gitCommit": "cf87473",
+  "gitCommit": "945c825",
   "notes": {
     "animals": [
       "Chicken",
