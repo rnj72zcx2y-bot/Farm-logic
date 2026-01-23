@@ -27,10 +27,12 @@ from .difficulty_score import compute_hardness
 # Fix A: NEVER accept a 1-region fallback. If region build fails => reject candidate.
 # Fix B: Stabilize expansion by prioritizing regions with small frontier (avoid boxed-in).
 #
-# NEW (requested): Easy & Medium tightening
-# - Much higher probability of '=' operators
+# Easy & Medium tightening (this iteration)
+# - Keep empty rate at 0.05 (per user request)
+# - Operators: even more '=' (easy 97%, medium 92%)
 # - Repair pass for Easy/Medium when diagnostic proves 3+ solutions (stop_at=3 without timeout)
-#   => tweak 1–2 region rules to stricter '=' rules matching the hidden solution and re-check.
+#   => tighten 4 region rules (not 2), target-aware selection, strict '=' only
+#   => up to 6 repair attempts
 # ------------------------------------------------------------
 
 
@@ -400,7 +402,7 @@ def legs_of(animal: Optional[str]) -> int:
 
 
 def pick_animals_for_card(rng: random.Random, difficulty: str) -> Tuple[Optional[str], Optional[str]]:
-    # slightly fewer empties on easy/medium to reduce ambiguity
+    # Keep as requested: easy/medium empties = 0.05
     empty_p = {"easy": 0.05, "medium": 0.05, "hard": 0.04}[difficulty]
     names = [a for a, _legs in ANIMALS]
 
@@ -535,11 +537,19 @@ def make_strict_equal_rule(rule_type: str, region_cells: List[Tuple[int, int]], 
     return {"type": "animals", "op": "=", "value": int(animal_count)}
 
 
-def repair_rules_easy_medium(puzzle: Dict[str, Any], rng: random.Random, difficulty: str, changes: int = 2) -> Dict[str, Any]:
+def region_targets(region_cells: List[Tuple[int, int]], cell_animal: Dict[Tuple[int, int], Optional[str]]) -> Tuple[int, int]:
+    animals = [cell_animal[c] for c in region_cells]
+    legs_sum = sum(legs_of(a) for a in animals)
+    animal_count = sum(1 for a in animals if a is not None)
+    return legs_sum, animal_count
+
+
+def repair_rules_easy_medium(puzzle: Dict[str, Any], rng: random.Random, difficulty: str, changes: int = 4) -> Dict[str, Any]:
     """Repair pass to reduce 3+ solution cases in Easy/Medium.
 
-    Strategy: replace 1–2 region rules with strict '=' rules computed from the hidden solution.
-    Keeps region shapes but tightens constraints.
+    - Tighten 4 region rules (not 2)
+    - Target-aware: prioritize regions whose legsSum collides (duplicates) or are less informative
+    - Always strict '=' in repair.
     """
     if difficulty not in ("easy", "medium"):
         return puzzle
@@ -549,22 +559,43 @@ def repair_rules_easy_medium(puzzle: Dict[str, Any], rng: random.Random, difficu
     if not regs or not cell_animal:
         return puzzle
 
-    # Prefer larger regions (more informative sums)
-    candidates = list(range(len(regs)))
-    candidates.sort(key=lambda i: len(regs[i].get("cells", [])), reverse=True)
-    top = candidates[: min(len(candidates), 6)]
+    # Compute targets per region
+    leg_vals = []
+    animal_vals = []
+    sizes = []
+    for reg in regs:
+        rcells = [tuple(x) for x in reg.get("cells", [])]
+        lsum, acnt = region_targets(rcells, cell_animal)
+        leg_vals.append(lsum)
+        animal_vals.append(acnt)
+        sizes.append(len(rcells))
 
-    for _ in range(changes):
-        if not top:
+    # Identify collisions on legsSum (strong signal of weak discrimination)
+    freq = {}
+    for v in leg_vals:
+        freq[v] = freq.get(v, 0) + 1
+
+    # Build candidate ranking:
+    #  - collision first (freq>1)
+    #  - then larger regions (more informative)
+    #  - then random tie-break
+    idxs = list(range(len(regs)))
+    def key(i: int):
+        collision = 1 if freq.get(leg_vals[i], 0) > 1 else 0
+        return (collision, sizes[i], rng.random())
+
+    idxs.sort(key=key, reverse=True)
+    chosen = idxs[: min(len(idxs), max(6, changes))]
+
+    # Apply strict '=' rules
+    for j in range(changes):
+        if not chosen:
             break
-        i = rng.choice(top)
+        i = chosen[j % len(chosen)]
         rcells = [tuple(x) for x in regs[i].get("cells", [])]
         if len(rcells) < 2:
             continue
-
-        # Choose which strict rule to apply
-        # Bias to legs because it tends to differentiate better than animals-count.
-        rule_type = "legs" if rng.random() < 0.75 else "animals"
+        rule_type = "legs" if (j % 3 != 2) else "animals"  # mostly legs, sometimes animals
         regs[i]["rule"] = make_strict_equal_rule(rule_type, rcells, cell_animal)
 
     puzzle["regions"] = regs
@@ -641,7 +672,6 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Optional
         rule = choose_rule_for_region(rng, difficulty, rcells, cell_animal)
         regions.append({"id": f"R{idx+1}", "cells": cell_list, "rule": rule})
 
-    # Store hidden solution in _internal for repair passes (never exported)
     solution_cells = {f"{r},{c}": cell_animal[(r, c)] for (r, c) in cell_animal.keys()}
 
     return {
@@ -668,10 +698,10 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Optional
 def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
     spec = SPECS[difficulty]
 
-    attempt_caps = {"easy": 240, "medium": 100, "hard": 110}
+    attempt_caps = {"easy": 260, "medium": 120, "hard": 110}
     timeout_caps = {"easy": 12, "medium": 8, "hard": 12}
 
-    max_attempts = attempt_caps.get(difficulty, 80)
+    max_attempts = attempt_caps.get(difficulty, 100)
     max_timeouts = timeout_caps.get(difficulty, 8)
 
     diag_enabled = os.getenv("SOLVER_DIAG_ENABLED", "true").lower() == "true"
@@ -710,14 +740,14 @@ def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
                 "timeMs": stats3.get("timeMs"),
             }
 
-            # NEW: if we *proved* 3 solutions quickly (no timeout) on Easy/Medium, try a few repairs
+            # If we proved 3+ solutions quickly (no timeout) on Easy/Medium, try a few repairs
             if difficulty in ("easy", "medium") and (not stats3.get("timedOut")) and solutions3 >= 3:
-                for _rep in range(3):
+                for _rep in range(6):
                     cand = deepcopy(puzzle)
-                    repair_rules_easy_medium(cand, random.Random(build_seed_int(date_utc, difficulty, attempt + 1000 + _rep)), difficulty, changes=2)
+                    rrng = random.Random(build_seed_int(date_utc, difficulty, attempt + 1000 + _rep))
+                    repair_rules_easy_medium(cand, rrng, difficulty, changes=4)
                     s2b, st2b = solve_count(cand, stop_at=2)
                     if s2b == 1:
-                        # keep diagnostic from original attempt (helps debugging)
                         cand["_internal"]["solverDiag"] = solver_diag
                         cand["_internal"]["uniqueSolution"] = True
                         cand["_internal"]["solverStats"] = st2b
