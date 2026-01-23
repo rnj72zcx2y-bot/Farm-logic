@@ -339,7 +339,7 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int):
 # QUICK SCORE (NEW)
 # ============================================================
 
-QUICK_SCORE_MIN = {"easy": 6.0, "medium": 9.0, "hard": 12.0}
+QUICK_SCORE_MIN = {"easy": 2.5, "medium": 9.0, "hard": 12.0}
 
 
 def quick_score_candidate(puzzle: Dict[str, Any]) -> float:
