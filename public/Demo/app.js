@@ -1,5 +1,9 @@
-// Farm-logic Daily Demo (MVP)
-// Starts from zero and loads today's puzzle via api/today.json.
+// Farm-logic Daily Demo (MVP+)
+// Improvements:
+// - Drag & Drop cards (drag to first cell, then tap adjacent highlighted cell)
+// - Undo button (reverts last placement)
+// - Remove on board (tap occupied cell)
+// - Highlight valid second cells after first cell selection
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -9,11 +13,17 @@ const state = {
   difficulty: 'easy',
   selectedCardId: null,
   flipSelected: false,
-  firstCell: null,   // {r,c}
+  firstCell: null,      // {r,c}
   placements: new Map(), // cardId -> {aOnFirst:boolean, c1:{r,c}, c2:{r,c}}
   cellToPlacement: new Map(), // "r,c" -> cardId
-  regionOfCell: new Map(), // "r,c" -> regionId
   regionDefs: [],
+  moveStack: [],        // array of cardIds placed in order
+  drag: {
+    active: false,
+    cardId: null,
+    ghostEl: null,
+    lastOverCellKey: null,
+  },
 };
 
 // Animal legs mapping used for rules.
@@ -43,10 +53,9 @@ function apiUrl(path){
   const seg = window.location.pathname.split('/').filter(Boolean);
   const repoRoot = (seg.length >= 1) ? `/${seg[0]}/` : '/';
   const base = window.location.origin + repoRoot;
-
-  // keep inside repo by stripping leading slash
   return new URL(path.replace(/^\/+/, ''), base).toString();
 }
+
 async function fetchJson(path){
   const res = await fetch(apiUrl(path), { cache: 'no-store' });
   if(!res.ok) throw new Error(`HTTP ${res.status} for ${path}`);
@@ -54,7 +63,6 @@ async function fetchJson(path){
 }
 
 function normalizeRule(rule){
-  // rule is like {type:'legs', op:'=', value:12} or {type:'uniqueSpecies'} etc.
   if(!rule || !rule.type) return { type: 'none' };
   return rule;
 }
@@ -66,10 +74,6 @@ function ruleToText(rule){
   if(rule.type === 'uniqueSpecies') return `All non-empty species in region must be unique`;
   if(rule.type === 'onlySpecies') return `All cells in region must be ${rule.species} (no empty)`;
   return `No rule`;
-}
-
-function isActiveCell(activeSet, r, c){
-  return activeSet.has(cellKey(r,c));
 }
 
 function areAdjacent(a, b){
@@ -98,6 +102,34 @@ function getAnimalAt(r, c){
   }
 }
 
+function clearHighlights(){
+  document.querySelectorAll('.cell').forEach(el => {
+    el.classList.remove('fail','pass','validSecond','dragOver');
+  });
+}
+
+function highlightValidSeconds(){
+  document.querySelectorAll('.cell').forEach(el => el.classList.remove('validSecond'));
+  if(!state.puzzle || !state.firstCell) return;
+  const {rows, cols, activeCellsCoords} = state.puzzle.grid;
+  const activeSet = new Set(activeCellsCoords.map(([r,c]) => cellKey(r,c)));
+
+  const nbs = [
+    {r: state.firstCell.r+1, c: state.firstCell.c},
+    {r: state.firstCell.r-1, c: state.firstCell.c},
+    {r: state.firstCell.r, c: state.firstCell.c+1},
+    {r: state.firstCell.r, c: state.firstCell.c-1},
+  ];
+  for(const nb of nbs){
+    if(nb.r<0||nb.c<0||nb.r>=rows||nb.c>=cols) continue;
+    const k = cellKey(nb.r, nb.c);
+    if(!activeSet.has(k)) continue;
+    if(state.cellToPlacement.has(k)) continue;
+    const el = document.querySelector(`.cell.active[data-r="${nb.r}"][data-c="${nb.c}"]`);
+    if(el) el.classList.add('validSecond');
+  }
+}
+
 function render(){
   if(!state.puzzle){
     $('#board').innerHTML = '<div class="meta">Load a puzzle to start.</div>';
@@ -105,6 +137,7 @@ function render(){
     $('#rules').innerHTML = '';
     $('#placed').innerHTML = '';
     $('#placedCount').textContent = '0 / 0';
+    $('#btnUndo').disabled = true;
     return;
   }
 
@@ -112,12 +145,13 @@ function render(){
   renderCards();
   renderRules();
   renderPlaced();
+  $('#btnUndo').disabled = state.moveStack.length === 0;
+  highlightValidSeconds();
 }
 
 function renderBoard(){
   const b = $('#board');
   const {rows, cols, activeCellsCoords} = state.puzzle.grid;
-
   b.style.gridTemplateColumns = `repeat(${cols}, 58px)`;
 
   const activeSet = new Set(activeCellsCoords.map(([r,c]) => cellKey(r,c)));
@@ -125,7 +159,7 @@ function renderBoard(){
   const html = [];
   for(let r=0;r<rows;r++){
     for(let c=0;c<cols;c++){
-      const active = isActiveCell(activeSet, r, c);
+      const active = activeSet.has(cellKey(r,c));
       const k = cellKey(r,c);
       const animal = active ? getAnimalAt(r,c) : null;
       const cls = ['cell', active ? 'active' : 'inactive'];
@@ -143,10 +177,7 @@ function renderBoard(){
   b.querySelectorAll('.cell.active').forEach(cell => {
     cell.addEventListener('click', () => onCellClick(cell));
     cell.addEventListener('keydown', (e) => {
-      if(e.key === 'Enter' || e.key === ' '){
-        e.preventDefault();
-        onCellClick(cell);
-      }
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); onCellClick(cell); }
     });
   });
 }
@@ -160,7 +191,7 @@ function renderCards(){
     const used = state.placements.has(c.id);
     const selected = state.selectedCardId === c.id;
     html.push(`
-      <div class="card ${used?'used':''} ${selected?'selected':''}" data-id="${c.id}">
+      <div class="card ${used?'used':''} ${selected?'selected':''}" data-id="${c.id}" draggable="false">
         <div class="domino">
           <div class="half">${c.a ?? ''}</div>
           <div class="half">${c.b ?? ''}</div>
@@ -174,11 +205,13 @@ function renderCards(){
   }
 
   wrap.innerHTML = html.join('');
+
   wrap.querySelectorAll('.card').forEach(el => {
+    const id = el.dataset.id;
+
     el.addEventListener('click', () => {
-      const id = el.dataset.id;
       if(state.placements.has(id)){
-        toast('Card already placed. Remove it from the Placed list.', 'info');
+        toast('Card already placed. Tap an occupied cell to remove.', 'info');
         return;
       }
       state.selectedCardId = id;
@@ -186,6 +219,12 @@ function renderCards(){
       state.firstCell = null;
       $('#selInfo').textContent = `Selected ${id} (flip: off)`;
       render();
+    });
+
+    // Pointer-based drag for iPad/Safari
+    el.addEventListener('pointerdown', (e) => {
+      if(state.placements.has(id)) return;
+      startDrag(e, el, id);
     });
   });
 }
@@ -237,61 +276,32 @@ function renderPlaced(){
 
   wrap.innerHTML = items.join('') || '<div class="meta">No cards placed yet.</div>';
   wrap.querySelectorAll('button[data-remove]').forEach(btn => {
-    btn.addEventListener('click', () => removePlacement(btn.dataset.remove));
+    btn.addEventListener('click', () => removePlacement(btn.dataset.remove, true));
   });
 }
 
-function removePlacement(cardId){
+function removePlacement(cardId, pushUndo=false){
   const pl = state.placements.get(cardId);
   if(!pl) return;
 
   state.placements.delete(cardId);
   state.cellToPlacement.delete(cellKey(pl.c1.r, pl.c1.c));
   state.cellToPlacement.delete(cellKey(pl.c2.r, pl.c2.c));
-  toast(`Removed ${cardId}`, 'info');
+
+  // also remove from moveStack if present (keep order)
+  state.moveStack = state.moveStack.filter(x => x !== cardId);
+
+  if(pushUndo){ toast(`Removed ${cardId}`, 'info'); }
+  state.firstCell = null;
   render();
 }
 
-function onCellClick(cellEl){
-  if(!state.selectedCardId){
-    toast('Select a card first.', 'info');
-    return;
-  }
-
-  const r = parseInt(cellEl.dataset.r, 10);
-  const c = parseInt(cellEl.dataset.c, 10);
-  const k = cellKey(r,c);
-
-  if(state.cellToPlacement.has(k)){
-    toast('Cell already occupied. Remove the card first.', 'bad');
-    return;
-  }
-
-  if(!state.firstCell){
-    state.firstCell = {r,c};
-    toast('Now click an adjacent cell.', 'info');
-    render();
-    return;
-  }
-
-  const second = {r,c};
-  if(!areAdjacent(state.firstCell, second)){
-    toast('Cells must be adjacent (up/down/left/right).', 'bad');
-    return;
-  }
-
-  // Also check second is free
-  if(state.cellToPlacement.has(cellKey(second.r, second.c))){
-    toast('Second cell is already occupied.', 'bad');
-    return;
-  }
-
-  const cardId = state.selectedCardId;
-  const aOnFirst = !state.flipSelected; // if flipSelected, swap
-
-  state.placements.set(cardId, { aOnFirst, c1: state.firstCell, c2: second });
-  state.cellToPlacement.set(cellKey(state.firstCell.r, state.firstCell.c), cardId);
-  state.cellToPlacement.set(cellKey(second.r, second.c), cardId);
+function placeCardOnCells(cardId, c1, c2){
+  const aOnFirst = !state.flipSelected;
+  state.placements.set(cardId, { aOnFirst, c1, c2 });
+  state.cellToPlacement.set(cellKey(c1.r, c1.c), cardId);
+  state.cellToPlacement.set(cellKey(c2.r, c2.c), cardId);
+  state.moveStack.push(cardId);
 
   state.selectedCardId = null;
   state.firstCell = null;
@@ -302,33 +312,55 @@ function onCellClick(cellEl){
   render();
 }
 
-function clearHighlights(){
-  document.querySelectorAll('.cell').forEach(el => {
-    el.classList.remove('fail','pass');
-  });
-}
+function onCellClick(cellEl){
+  const r = parseInt(cellEl.dataset.r, 10);
+  const c = parseInt(cellEl.dataset.c, 10);
+  const k = cellKey(r,c);
 
-function highlightRegions(results){
-  // highlight region cells based on pass/fail
-  const activeCells = new Set(state.puzzle.grid.activeCellsCoords.map(([r,c]) => cellKey(r,c)));
-
-  // Build mapping cell -> ok?
-  const cellOk = new Map();
-  for(const reg of state.regionDefs){
-    const res = results.get(reg.id);
-    if(!res) continue;
-    for(const [r,c] of reg.cells){
-      const k = cellKey(r,c);
-      if(activeCells.has(k)) cellOk.set(k, res.ok);
-    }
+  // Remove on-board if occupied
+  if(state.cellToPlacement.has(k)){
+    const cardId = state.cellToPlacement.get(k);
+    removePlacement(cardId, true);
+    return;
   }
 
-  document.querySelectorAll('.cell.active').forEach(el => {
-    const r = parseInt(el.dataset.r,10);
-    const c = parseInt(el.dataset.c,10);
-    const k = cellKey(r,c);
-    if(cellOk.has(k)) el.classList.add(cellOk.get(k) ? 'pass' : 'fail');
-  });
+  if(!state.selectedCardId){
+    toast('Select or drag a card first.', 'info');
+    return;
+  }
+
+  if(!state.firstCell){
+    state.firstCell = {r,c};
+    toast('Now tap an adjacent highlighted cell.', 'info');
+    render();
+    return;
+  }
+
+  const second = {r,c};
+  if(!areAdjacent(state.firstCell, second)){
+    toast('Cells must be adjacent (up/down/left/right).', 'bad');
+    return;
+  }
+
+  if(state.cellToPlacement.has(cellKey(second.r, second.c))){
+    toast('Second cell is already occupied.', 'bad');
+    return;
+  }
+
+  placeCardOnCells(state.selectedCardId, state.firstCell, second);
+}
+
+function onUndo(){
+  const last = state.moveStack.pop();
+  if(!last){ toast('Nothing to undo.', 'info'); return; }
+  const pl = state.placements.get(last);
+  if(!pl){ render(); return; }
+  state.placements.delete(last);
+  state.cellToPlacement.delete(cellKey(pl.c1.r, pl.c1.c));
+  state.cellToPlacement.delete(cellKey(pl.c2.r, pl.c2.c));
+  toast(`Undid ${last}`, 'info');
+  state.firstCell = null;
+  render();
 }
 
 function compare(op, left, right){
@@ -351,9 +383,7 @@ function evaluateRegion(reg){
       legsSum += (LEGS[a] ?? 0);
     }
     if(rule.type === 'uniqueSpecies' && a){
-      if(seen.has(a)){
-        return { ok:false, msg:`Duplicate species: ${a}` };
-      }
+      if(seen.has(a)) return { ok:false, msg:`Duplicate species: ${a}` };
       seen.add(a);
     }
     if(rule.type === 'onlySpecies'){
@@ -370,13 +400,6 @@ function evaluateRegion(reg){
     const ok = compare(rule.op, animalsCount, rule.value);
     return ok ? {ok:true, msg:''} : {ok:false, msg:`Animals count is ${animalsCount}`};
   }
-  if(rule.type === 'uniqueSpecies'){
-    return {ok:true, msg:''};
-  }
-  if(rule.type === 'onlySpecies'){
-    return {ok:true, msg:''};
-  }
-
   return {ok:true, msg:''};
 }
 
@@ -390,18 +413,33 @@ function checkWin(results){
   return true;
 }
 
-function onCheck(){
-  if(!state.puzzle){
-    toast('Load a puzzle first.', 'bad');
-    return;
+function highlightRegions(results){
+  const activeCells = new Set(state.puzzle.grid.activeCellsCoords.map(([r,c]) => cellKey(r,c)));
+  const cellOk = new Map();
+  for(const reg of state.regionDefs){
+    const res = results.get(reg.id);
+    if(!res) continue;
+    for(const [r,c] of reg.cells){
+      const k = cellKey(r,c);
+      if(activeCells.has(k)) cellOk.set(k, res.ok);
+    }
   }
+
+  document.querySelectorAll('.cell.active').forEach(el => {
+    const r = parseInt(el.dataset.r,10);
+    const c = parseInt(el.dataset.c,10);
+    const k = cellKey(r,c);
+    if(cellOk.has(k)) el.classList.add(cellOk.get(k) ? 'pass' : 'fail');
+  });
+}
+
+function onCheck(){
+  if(!state.puzzle){ toast('Load a puzzle first.', 'bad'); return; }
 
   clearHighlights();
+  highlightValidSeconds();
 
-  // If not all cards placed, we still validate but show warning
-  if(!allCardsPlaced()){
-    toast('Not all cards placed yet.', 'info');
-  }
+  if(!allCardsPlaced()) toast('Not all cards placed yet.', 'info');
 
   const results = new Map();
   for(const reg of state.regionDefs){
@@ -412,10 +450,9 @@ function onCheck(){
   highlightRegions(results);
 
   const ok = checkWin(results);
-  if(ok){
-    toast('🎉 Correct! All regions satisfied.', 'ok');
-  } else {
-    const bad = [...results.entries()].filter(([_,r]) => !r.ok).length;
+  if(ok){ toast('🎉 Correct! All regions satisfied.', 'ok'); }
+  else {
+    const bad = [...results.values()].filter(r => !r.ok).length;
     toast(bad ? `❌ ${bad} region(s) failing.` : '✅ No failing regions (place all cards).', bad ? 'bad' : 'ok');
   }
 }
@@ -427,6 +464,7 @@ function onReset(){
   state.firstCell = null;
   state.placements.clear();
   state.cellToPlacement.clear();
+  state.moveStack = [];
   $('#selInfo').textContent = 'No card selected';
   clearHighlights();
   renderRules(null);
@@ -435,10 +473,7 @@ function onReset(){
 }
 
 function onFlip(){
-  if(!state.selectedCardId){
-    toast('Select a card first.', 'info');
-    return;
-  }
+  if(!state.selectedCardId){ toast('Select a card first.', 'info'); return; }
   state.flipSelected = !state.flipSelected;
   $('#selInfo').textContent = `Selected ${state.selectedCardId} (flip: ${state.flipSelected ? 'on' : 'off'})`;
   toast(`Flip: ${state.flipSelected ? 'on' : 'off'}`, 'info');
@@ -452,60 +487,140 @@ async function loadToday(){
   state.today = today;
 
   const path = today.paths?.[state.difficulty];
-  if(!path){
-    throw new Error(`No path for difficulty ${state.difficulty}`);
-  }
+  if(!path) throw new Error(`No path for difficulty ${state.difficulty}`);
 
   const puzzle = await fetchJson(path);
   state.puzzle = puzzle;
 
-  // Regions
   state.regionDefs = puzzle.regions || [];
 
-  // Meta line
   const date = today.dateUtc || puzzle.dateUtc || '—';
   $('#metaLine').textContent = `Date (UTC): ${date} · Difficulty: ${state.difficulty}`;
 
-  // Reset play state
   state.selectedCardId = null;
   state.flipSelected = false;
   state.firstCell = null;
   state.placements.clear();
   state.cellToPlacement.clear();
+  state.moveStack = [];
   $('#selInfo').textContent = 'No card selected';
 
   toast(`Loaded ${state.difficulty} for ${date}`, 'ok');
   render();
 }
 
+// ---------------- Drag & Drop (Pointer) ----------------
+function startDrag(e, cardEl, cardId){
+  // only left click / primary touch
+  state.drag.active = true;
+  state.drag.cardId = cardId;
+  state.selectedCardId = cardId;
+  state.flipSelected = false;
+  state.firstCell = null;
+
+  $('#selInfo').textContent = `Selected ${cardId} (dragging…)`;
+
+  // create ghost
+  const ghost = cardEl.cloneNode(true);
+  ghost.classList.add('ghost');
+  ghost.style.left = `${e.clientX}px`;
+  ghost.style.top = `${e.clientY}px`;
+  document.body.appendChild(ghost);
+  state.drag.ghostEl = ghost;
+
+  cardEl.setPointerCapture?.(e.pointerId);
+
+  window.addEventListener('pointermove', onDragMove, {passive:false});
+  window.addEventListener('pointerup', onDragEnd, {passive:false, once:true});
+  window.addEventListener('pointercancel', onDragEnd, {passive:false, once:true});
+}
+
+function cellFromPoint(x, y){
+  const el = document.elementFromPoint(x, y);
+  if(!el) return null;
+  const cell = el.closest?.('.cell.active');
+  return cell || null;
+}
+
+function onDragMove(e){
+  if(!state.drag.active) return;
+  e.preventDefault();
+  const g = state.drag.ghostEl;
+  if(g){
+    g.style.left = `${e.clientX}px`;
+    g.style.top = `${e.clientY}px`;
+  }
+
+  const cell = cellFromPoint(e.clientX, e.clientY);
+  document.querySelectorAll('.cell.dragOver').forEach(el => el.classList.remove('dragOver'));
+  if(cell){
+    const r = parseInt(cell.dataset.r,10);
+    const c = parseInt(cell.dataset.c,10);
+    const k = cellKey(r,c);
+    if(!state.cellToPlacement.has(k)){
+      cell.classList.add('dragOver');
+      state.drag.lastOverCellKey = k;
+    }
+  }
+}
+
+function onDragEnd(e){
+  window.removeEventListener('pointermove', onDragMove);
+  document.querySelectorAll('.cell.dragOver').forEach(el => el.classList.remove('dragOver'));
+
+  if(state.drag.ghostEl){
+    state.drag.ghostEl.remove();
+    state.drag.ghostEl = null;
+  }
+
+  const cell = cellFromPoint(e.clientX, e.clientY);
+  state.drag.active = false;
+
+  if(!cell){
+    toast('Drop on a free active cell to start placement.', 'info');
+    $('#selInfo').textContent = `Selected ${state.selectedCardId ?? '—'} (flip: off)`;
+    render();
+    return;
+  }
+
+  const r = parseInt(cell.dataset.r,10);
+  const c = parseInt(cell.dataset.c,10);
+  const k = cellKey(r,c);
+  if(state.cellToPlacement.has(k)){
+    toast('That cell is occupied.', 'bad');
+    render();
+    return;
+  }
+
+  // set first cell and let user pick second
+  state.firstCell = {r,c};
+  toast('Now tap an adjacent highlighted cell to finish.', 'info');
+  render();
+}
+
 function wireUI(){
   $('#btnLoad').addEventListener('click', async () => {
-    try{
-      await loadToday();
-    } catch(err){
-      console.error(err);
-      toast(`Load failed: ${err.message}`, 'bad');
-    }
+    try{ await loadToday(); }
+    catch(err){ console.error(err); toast(`Load failed: ${err.message}`, 'bad'); }
   });
 
   $('#btnCheck').addEventListener('click', () => {
-    try{ onCheck(); } catch(err){
-      console.error(err);
-      toast(`Check failed: ${err.message}`, 'bad');
-    }
+    try{ onCheck(); }
+    catch(err){ console.error(err); toast(`Check failed: ${err.message}`, 'bad'); }
   });
 
   $('#btnReset').addEventListener('click', () => onReset());
+  $('#btnUndo').addEventListener('click', () => onUndo());
   $('#btnFlip').addEventListener('click', () => onFlip());
 
   $('#difficulty').addEventListener('change', () => {
     state.difficulty = $('#difficulty').value;
   });
 
-  // Keyboard shortcuts
   window.addEventListener('keydown', (e) => {
     if(e.key.toLowerCase() === 'f') onFlip();
     if(e.key.toLowerCase() === 'r') onReset();
+    if(e.key.toLowerCase() === 'z') onUndo();
   });
 }
 

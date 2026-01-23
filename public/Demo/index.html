@@ -12,7 +12,7 @@
       <div class="logo">🐾</div>
       <div>
         <div class="title">Farm‑logic</div>
-        <div class="subtitle">Daily Demo (MVP)</div>
+        <div class="subtitle">Daily Demo (MVP+)</div>
       </div>
     </div>
 
@@ -28,6 +28,7 @@
 
       <button id="btnLoad" class="btn primary">Load today</button>
       <button id="btnCheck" class="btn">Check</button>
+      <button id="btnUndo" class="btn">Undo</button>
       <button id="btnReset" class="btn danger">Reset</button>
     </div>
   </header>
@@ -44,8 +45,9 @@
       </div>
 
       <div class="help">
-        <div class="hint"><b>How to play:</b> Click a card → click two adjacent active cells to place it. Use <b>Flip</b> if needed.</div>
-        <div class="hint">Tip: If you misplace a card, click it in the list on the right and choose <b>Remove</b>.</div>
+        <div class="hint"><b>Drag & Drop:</b> Drag a card onto a cell → then tap an adjacent highlighted cell to complete placement.</div>
+        <div class="hint"><b>Remove:</b> Tap an occupied cell to remove its card. <b>Undo</b> reverts the last placement.</div>
+        <div class="hint"><b>Flip:</b> Use the Flip button (or press <b>F</b>) before you place the card.</div>
       </div>
 
       <div id="toast" class="toast" role="status" aria-live="polite"></div>

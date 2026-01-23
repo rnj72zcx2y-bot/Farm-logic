@@ -1,27 +1,17 @@
-# Farm-logic Daily Demo (MVP)
+# Farm-logic Daily Demo (MVP+)
 
-This folder contains a minimal playable demo that loads today's puzzle from your generated JSON API.
+This demo is optimized for iPad/Safari and GitHub Pages.
 
-## How it works
-- Loads `api/today.json` (relative to the current site URL)
-- Then loads the selected difficulty JSON via `today.paths.easy|medium|hard`
+## Features
+- Loads `api/today.json` and then the selected difficulty via `today.paths`.
+- Drag & drop cards: drag onto the first cell, then tap a highlighted adjacent cell to complete placement.
+- Undo: reverts the last placement.
+- Remove: tap an occupied cell to remove its card.
+- Check: validates region rules client-side.
 
-## Hosting
-Place these files in your web root (e.g., `public/demo/`) and open `index.html`.
-For GitHub Pages or any static hosting, ensure your generated JSON is available at `.../api/...`.
-
-## Gameplay
-- Click a card
-- Click two adjacent active cells to place it
-- Use **Flip** (or press `F`) if you want to swap `a` and `b`
-- Press **Check** to validate region rules
-- Press **Reset** to clear placements
+## Install
+Copy the folder into your repo under `public/Demo/` (or `public/demo/`) and keep the API under `public/api/`.
 
 ## Notes
-- This demo validates rules client-side:
-  - legs (=,<,>)
-  - animals (=,<,>)
-  - uniqueSpecies
-  - onlySpecies
-- Leg mapping is hardcoded for the 8 demo animals:
-  - Chicken=2, Bee=6, Spider=8, Snail=0, others=4
+- The demo computes rule validation locally (legs/animals/uniqueSpecies/onlySpecies).
+- Leg mapping is hardcoded for the 8 animals.

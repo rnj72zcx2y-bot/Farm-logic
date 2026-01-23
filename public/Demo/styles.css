@@ -10,8 +10,6 @@
   --ok:#34d399;
   --warn:#fbbf24;
   --border:rgba(255,255,255,.10);
-  --cell:#152044;
-  --cell2:#111a37;
   --shadow:0 8px 30px rgba(0,0,0,.35);
 }
 
@@ -48,7 +46,7 @@ body{
 .control{display:flex; flex-direction:column; gap:6px}
 label{font-size:12px;color:var(--muted)}
 select{
-  background: var(--panel);
+  background: rgba(255,255,255,.04);
   color: var(--text);
   border: 1px solid var(--border);
   padding: 8px 10px;
@@ -68,6 +66,7 @@ select{
 .btn:active{transform: translateY(0px)}
 .btn.primary{background: rgba(96,165,250,.16); border-color: rgba(96,165,250,.4)}
 .btn.danger{background: rgba(251,113,133,.12); border-color: rgba(251,113,133,.35)}
+.btn:disabled{opacity:.5; cursor:not-allowed}
 
 .layout{
   display:grid;
@@ -131,8 +130,9 @@ select{
 }
 .cell .animal{font-size:12px; text-align:center; padding:0 6px; line-height:1.1}
 
-.cell.selectedA{outline: 2px solid rgba(96,165,250,.55)}
-.cell.selectedB{outline: 2px solid rgba(94,234,212,.55)}
+.cell.selectedA{outline: 2px solid rgba(96,165,250,.75)}
+.cell.validSecond{outline: 3px solid rgba(94,234,212,.55)}
+.cell.dragOver{outline: 3px solid rgba(96,165,250,.55)}
 
 .cell.fail{outline: 3px solid rgba(251,113,133,.70)}
 .cell.pass{outline: 3px solid rgba(52,211,153,.55)}
@@ -149,9 +149,11 @@ select{
   border-radius: 14px;
   padding: 10px;
   background: rgba(15,23,42,.6);
-  cursor:pointer;
+  cursor: grab;
   transition: .15s ease;
+  touch-action: none;
 }
+.card:active{cursor: grabbing}
 .card:hover{transform: translateY(-1px); border-color: rgba(255,255,255,.18)}
 .card.selected{outline: 2px solid rgba(96,165,250,.55)}
 .card.used{opacity:.45}
@@ -244,4 +246,15 @@ select{
   color: rgba(255,255,255,.55);
   font-size: 12px;
   text-align:center;
+}
+
+/* Simple drag ghost */
+.ghost{
+  position: fixed;
+  z-index: 9999;
+  pointer-events:none;
+  width: 170px;
+  transform: translate(-50%,-50%);
+  opacity: .95;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,.45));
 }
