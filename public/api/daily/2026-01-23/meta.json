@@ -8,11 +8,11 @@
           "maxDepth": 6,
           "mu": 0.85,
           "nvPerCard": 149.17,
-          "raw": 1.7934,
+          "raw": 1.7902,
           "sigma": 0.25,
-          "tPerCardMs": 2.5
+          "tPerCardMs": 2.33
         },
-        "hardness01": 0.9775,
+        "hardness01": 0.9773,
         "passedBand": false,
         "targetBand": [
           0.2,
@@ -35,7 +35,7 @@
           "maxDepth": 6,
           "nodesVisited": 895,
           "solutionsFound": 2,
-          "timeMs": 15
+          "timeMs": 14
         },
         "stopAt": 2,
         "type": "CSP-backtracking"
@@ -125,9 +125,9 @@
       "uniqueSolution": false
     }
   },
-  "generatedAtUtc": "2026-01-23T03:26:41Z",
+  "generatedAtUtc": "2026-01-23T03:55:35Z",
   "generatorVersion": "1.0.0",
-  "gitCommit": "c383896",
+  "gitCommit": "2c81d07",
   "notes": {
     "animals": [
       "Chicken",
