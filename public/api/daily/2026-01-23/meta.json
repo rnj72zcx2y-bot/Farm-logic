@@ -8,11 +8,11 @@
           "maxDepth": 6,
           "mu": 0.85,
           "nvPerCard": 149.17,
-          "raw": 1.7902,
+          "raw": 1.7934,
           "sigma": 0.25,
-          "tPerCardMs": 2.33
+          "tPerCardMs": 2.5
         },
-        "hardness01": 0.9773,
+        "hardness01": 0.9775,
         "passedBand": false,
         "targetBand": [
           0.2,
@@ -35,7 +35,7 @@
           "maxDepth": 6,
           "nodesVisited": 895,
           "solutionsFound": 2,
-          "timeMs": 14
+          "timeMs": 15
         },
         "stopAt": 2,
         "type": "CSP-backtracking"
@@ -49,11 +49,11 @@
           "maxDepth": 24,
           "mu": 0.85,
           "nvPerCard": 1.17,
-          "raw": 0.1199,
+          "raw": 0.1225,
           "sigma": 0.25,
-          "tPerCardMs": 0.0
+          "tPerCardMs": 0.04
         },
-        "hardness01": 0.0511,
+        "hardness01": 0.0517,
         "passedBand": false,
         "targetBand": [
           0.7,
@@ -76,7 +76,7 @@
           "maxDepth": 24,
           "nodesVisited": 28,
           "solutionsFound": 2,
-          "timeMs": 0
+          "timeMs": 1
         },
         "stopAt": 2,
         "type": "CSP-backtracking"
@@ -90,11 +90,11 @@
           "maxDepth": 15,
           "mu": 0.85,
           "nvPerCard": 88.27,
-          "raw": 1.5863,
+          "raw": 1.5882,
           "sigma": 0.25,
-          "tPerCardMs": 1.27
+          "tPerCardMs": 1.33
         },
-        "hardness01": 0.95,
+        "hardness01": 0.9504,
         "passedBand": false,
         "targetBand": [
           0.45,
@@ -117,7 +117,7 @@
           "maxDepth": 15,
           "nodesVisited": 1324,
           "solutionsFound": 2,
-          "timeMs": 19
+          "timeMs": 20
         },
         "stopAt": 2,
         "type": "CSP-backtracking"
@@ -125,9 +125,9 @@
       "uniqueSolution": false
     }
   },
-  "generatedAtUtc": "2026-01-23T00:55:48Z",
+  "generatedAtUtc": "2026-01-23T03:26:41Z",
   "generatorVersion": "1.0.0",
-  "gitCommit": "d16d0c8",
+  "gitCommit": "c383896",
   "notes": {
     "animals": [
       "Chicken",

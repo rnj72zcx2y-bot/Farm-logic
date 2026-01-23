@@ -49,9 +49,9 @@
           "maxDepth": 24,
           "mu": 0.85,
           "nvPerCard": 788186.75,
-          "raw": 5.6104,
+          "raw": 5.612,
           "sigma": 0.25,
-          "tPerCardMs": 21611.04
+          "tPerCardMs": 22147.67
         },
         "hardness01": 1.0,
         "passedBand": false,
@@ -76,7 +76,7 @@
           "maxDepth": 24,
           "nodesVisited": 18916482,
           "solutionsFound": 2,
-          "timeMs": 518665
+          "timeMs": 531544
         },
         "stopAt": 2,
         "type": "CSP-backtracking"
@@ -90,11 +90,11 @@
           "maxDepth": 15,
           "mu": 0.85,
           "nvPerCard": 206.4,
-          "raw": 2.0164,
+          "raw": 2.0211,
           "sigma": 0.25,
-          "tPerCardMs": 9.6
+          "tPerCardMs": 10.4
         },
-        "hardness01": 0.9907,
+        "hardness01": 0.9908,
         "passedBand": false,
         "targetBand": [
           0.45,
@@ -117,7 +117,7 @@
           "maxDepth": 15,
           "nodesVisited": 3096,
           "solutionsFound": 2,
-          "timeMs": 144
+          "timeMs": 156
         },
         "stopAt": 2,
         "type": "CSP-backtracking"
@@ -125,9 +125,9 @@
       "uniqueSolution": false
     }
   },
-  "generatedAtUtc": "2026-01-23T01:04:27Z",
+  "generatedAtUtc": "2026-01-23T03:35:33Z",
   "generatorVersion": "1.0.0",
-  "gitCommit": "d16d0c8",
+  "gitCommit": "c383896",
   "notes": {
     "animals": [
       "Chicken",
