@@ -6,14 +6,12 @@ import networkx as nx
 
 from .config import ANIMALS
 
-# Map species name -> legs, and index for bitmask
 SPECIES = [name for name, _legs in ANIMALS]
 LEGS = {name: legs for name, legs in ANIMALS}
 SPECIES_ID = {name: i for i, name in enumerate(SPECIES)}
 
 
 def _feasible_domino_tiling(active_cells: List[Tuple[int, int]]) -> bool:
-    """Quick feasibility: perfect matching exists."""
     n = len(active_cells)
     if n % 2 == 1:
         return False
@@ -77,35 +75,41 @@ def _parse_rule(rule: Dict[str, Any]) -> Tuple[str, Any]:
     return "none", None
 
 
-def solve_count(puzzle: Dict[str, Any], stop_at: int = 2) -> Tuple[int, Dict[str, Any]]:
-    """CSP solver with Stop-at-2 + safety time budget + optional progress logs.
+def solve_count(
+    puzzle: Dict[str, Any],
+    stop_at: int = 2,
+    time_limit_override_sec: Optional[float] = None,
+    verbose_override: Optional[bool] = None,
+    progress_every_override: Optional[int] = None,
+) -> Tuple[int, Dict[str, Any]]:
+    """CSP solver with Stop-at-N and optional time-limit override.
 
-    Why this exists:
-    - Medium/Hard can occasionally explode in search and look like a hang.
-    - We add a wall-clock timeout so the CI pipeline stays responsive.
+    - stop_at=2 is best practice for uniqueness gating (as soon as 2 solutions exist => not unique).
+    - time_limit_override_sec can be used for cheap diagnostic second pass (e.g., stop_at=3, time_limit=2s).
 
-    Env vars (optional):
-    - SOLVER_VERBOSE=true|false
-    - SOLVER_PROGRESS_EVERY=10000  (nodes)
-    - SOLVER_TIME_LIMIT_EASY=5
-    - SOLVER_TIME_LIMIT_MEDIUM=15
-    - SOLVER_TIME_LIMIT_HARD=25
-
-    Returns:
-      solutionsFound in {0,1,2}, where 2 means 2+ found OR timeout (treated as non-unique)
+    Env vars (defaults):
+      SOLVER_VERBOSE=true|false
+      SOLVER_PROGRESS_EVERY=20000
+      SOLVER_TIME_LIMIT_EASY=5
+      SOLVER_TIME_LIMIT_MEDIUM=15
+      SOLVER_TIME_LIMIT_HARD=25
     """
     t0 = time.time()
 
     diff = puzzle.get("difficulty", "medium")
-    verbose = os.getenv("SOLVER_VERBOSE", "false").lower() == "true"
-    progress_every = int(os.getenv("SOLVER_PROGRESS_EVERY", "20000"))
+
+    env_verbose = os.getenv("SOLVER_VERBOSE", "false").lower() == "true"
+    verbose = env_verbose if verbose_override is None else bool(verbose_override)
+
+    env_progress_every = int(os.getenv("SOLVER_PROGRESS_EVERY", "20000"))
+    progress_every = env_progress_every if progress_every_override is None else int(progress_every_override)
 
     default_limits = {
         "easy": float(os.getenv("SOLVER_TIME_LIMIT_EASY", "5")),
         "medium": float(os.getenv("SOLVER_TIME_LIMIT_MEDIUM", "15")),
         "hard": float(os.getenv("SOLVER_TIME_LIMIT_HARD", "25")),
     }
-    time_limit = default_limits.get(diff, 15.0)
+    time_limit = default_limits.get(diff, 15.0) if time_limit_override_sec is None else float(time_limit_override_sec)
 
     grid = puzzle.get("grid", {})
     active_ll = grid.get("activeCellsCoords", [])
@@ -141,10 +145,8 @@ def solve_count(puzzle: Dict[str, Any], stop_at: int = 2) -> Tuple[int, Dict[str
     cards = puzzle.get("cards", [])
     n_cards = len(cards)
 
-    # Build edges among active cells
     edges, edges_by_cell = _domino_edges(active_cells)
 
-    # Regions
     regions = puzzle.get("regions", [])
     R = len(regions)
     cell_to_idx = {cell: i for i, cell in enumerate(active_cells)}
@@ -156,22 +158,20 @@ def solve_count(puzzle: Dict[str, Any], stop_at: int = 2) -> Tuple[int, Dict[str
 
     for rid, reg in enumerate(regions):
         for rc in reg.get("cells", []):
-            region_of_cell[cell_to_idx[tuple(rc)]] = rid
-            region_cells[rid].append(cell_to_idx[tuple(rc)])
+            idx = cell_to_idx[tuple(rc)]
+            region_of_cell[idx] = rid
+            region_cells[rid].append(idx)
         k, p = _parse_rule(reg.get("rule", {}) or {})
         rule_kind[rid] = k
         rule_payload[rid] = p
 
     region_size = [len(region_cells[r]) for r in range(R)]
-
-    # Card halves
     card_halves: List[Tuple[Optional[str], Optional[str]]] = [(c.get("a"), c.get("b")) for c in cards]
 
     occupied = [False] * n_cells
     animal_at: List[Optional[str]] = [None] * n_cells
     used_card = [False] * n_cards
 
-    # Region trackers
     sum_legs = [0] * R
     count_animals = [0] * R
     remaining = region_size[:]
@@ -213,7 +213,6 @@ def solve_count(puzzle: Dict[str, Any], stop_at: int = 2) -> Tuple[int, Dict[str
             return True
         k = rule_kind[rid]
         p = rule_payload[rid]
-
         if k == "only":
             return animal is not None and animal == p
         if k == "unique":
@@ -227,7 +226,6 @@ def solve_count(puzzle: Dict[str, Any], stop_at: int = 2) -> Tuple[int, Dict[str
         k = rule_kind[rid]
         p = rule_payload[rid]
         rem = remaining[rid]
-
         if k == "none":
             return True
         if k == "unique":
@@ -268,7 +266,6 @@ def solve_count(puzzle: Dict[str, Any], stop_at: int = 2) -> Tuple[int, Dict[str
         return all(region_possible(r) for r in range(R))
 
     def final_check() -> bool:
-        # exact checks at full assignment
         for rid in range(R):
             k = rule_kind[rid]
             p = rule_payload[rid]
@@ -324,7 +321,6 @@ def solve_count(puzzle: Dict[str, Any], stop_at: int = 2) -> Tuple[int, Dict[str
     def dfs(depth: int):
         nonlocal nodes_visited, backtracks, max_depth, solutions, timed_out
 
-        # timeout check
         if (time.time() - t0) > time_limit:
             timed_out = True
             return
@@ -406,10 +402,10 @@ def solve_count(puzzle: Dict[str, Any], stop_at: int = 2) -> Tuple[int, Dict[str
 
     dfs(0)
 
-    # If timed out, treat as non-unique (solutionsFound=2)
     sf = solutions if solutions < stop_at else stop_at
+    # if timed out and didn't reach 2, treat as non-unique
     if timed_out and sf < 2:
-        sf = 2
+        sf = min(stop_at, 2)
 
     stats = {
         "type": "CSP-backtracking",
