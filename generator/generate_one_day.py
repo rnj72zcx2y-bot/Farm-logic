@@ -622,9 +622,9 @@ def _env_float(name: str, default: float) -> float:
 def quick_score_min(difficulty: str) -> float:
     # Conservative defaults; override via env if needed.
     if difficulty == "easy":
-        return _env_float("QUICK_SCORE_MIN_EASY", 3.8)
+        return _env_float("QUICK_SCORE_MIN_EASY", 3.2)
     if difficulty == "medium":
-        return _env_float("QUICK_SCORE_MIN_MEDIUM", 5.5)
+        return _env_float("QUICK_SCORE_MIN_MEDIUM", 4.0)
     return _env_float("QUICK_SCORE_MIN_HARD", 6.0)
 
 
