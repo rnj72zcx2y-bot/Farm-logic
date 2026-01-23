@@ -43,7 +43,7 @@ jobs:
           SOLVER_TIME_LIMIT_HARD: "245" 
           # Diagnostic pass (stop_at=3) – more useful than 2s
           SOLVER_DIAG_ENABLED: "true"
-          SOLVER_DIAG_TIME_LIMIT_-SEC: "5.0"
+          SOLVER_DIAG_TIME_LIMIT_-SEC: "30"
         run: |
           DAYS="${{ inputs.days }}"
           echo "[WF] days=$DAYS (generator verbose=always on)"
