@@ -47,11 +47,11 @@
     "hard": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 20845.75,
+          "btPerCard": 20622.96,
           "maxDepth": 23,
           "mu": 0.85,
-          "nvPerCard": 32392.21,
-          "raw": 4.1481,
+          "nvPerCard": 31971.21,
+          "raw": 4.1438,
           "sigma": 0.25,
           "tPerCardMs": 625.0
         },
@@ -74,9 +74,9 @@
       "seed": "sha256:ebe5bca6af19b61b6e98e6a8dc067b3d36eb4a7b022a93412a8c1815a1e89db5",
       "solver": {
         "stats": {
-          "backtracks": 500298,
+          "backtracks": 494951,
           "maxDepth": 23,
-          "nodesVisited": 777413,
+          "nodesVisited": 767309,
           "solutionsFound": 2,
           "timeLimitSec": 15.0,
           "timeMs": 15000,
@@ -121,7 +121,7 @@
           "maxDepth": 15,
           "nodesVisited": 25,
           "solutionsFound": 2,
-          "timeLimitSec": 10.0,
+          "timeLimitSec": 8.0,
           "timeMs": 0,
           "timedOut": false
         },
@@ -131,9 +131,9 @@
       "uniqueSolution": false
     }
   },
-  "generatedAtUtc": "2026-01-23T05:15:41Z",
+  "generatedAtUtc": "2026-01-23T05:24:15Z",
   "generatorVersion": "1.0.0",
-  "gitCommit": "90f7bd6",
+  "gitCommit": "1ccbaef",
   "notes": {
     "animals": [
       "Chicken",
