@@ -418,9 +418,38 @@ def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
             if best is None:
                 best, best_stats, best_score = puzzle, stats2, score2
 
-    if best is None:
-        raise RuntimeError(f"No solvable puzzle for {date_utc} {difficulty}")
+# ----------------------------
+# FINAL FAILSAFE FALLBACK
+# ----------------------------
 
+print(f"[WARN] No unique puzzle found for {date_utc} {difficulty}. Entering failsafe fallback.")
+
+for attempt in range(200):
+    puzzle = generate_candidate(date_utc, difficulty, attempt + 100_000)
+    if puzzle is None:
+        continue
+
+    solutions, stats = solve_count(puzzle, stop_at=2)
+
+    if solutions >= 1:
+        puzzle["_internal"]["uniqueSolution"] = (solutions == 1)
+        puzzle["_internal"]["solverStats"] = stats
+        puzzle["_internal"]["difficultyScore"] = compute_hardness(
+            difficulty, spec.cards, stats
+        )
+        puzzle["_internal"]["fallback"] = True
+        puzzle["_internal"]["quickScore"] = None
+
+        print(
+            f"[WARN] Using fallback puzzle for {date_utc} {difficulty} "
+            f"(solutions={solutions})"
+        )
+        return puzzle
+
+raise RuntimeError(
+    f"CRITICAL: No solvable puzzle found for {date_utc} {difficulty} "
+    f"even after failsafe fallback"
+)k
     best["_internal"]["uniqueSolution"] = False
     best["_internal"]["solverStats"] = best_stats
     best["_internal"]["difficultyScore"] = best_score
