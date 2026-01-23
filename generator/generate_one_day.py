@@ -11,12 +11,41 @@ from .solver_unique import solve_count
 from .difficulty_score import compute_hardness
 
 # ------------------------------------------------------------
-# DEV FAST SAFE
-# Goal: NEVER appear to hang.
-# - Strict attempt caps per difficulty
-# - Extra progress prints from generate_unique()
-# - Early bailout on repeated solver timeouts
-# - Always returns a solvable puzzle if found; uniqueness is a bonus in FAST mode
+# generate_one_day.py
+#
+# This generator module is used by generator.generate_range.
+#
+# Main solver call (recommended):
+#   solutions2, stats2 = solve_count(puzzle, stop_at=2)
+#
+# Why stop_at=2?
+# - As soon as the solver finds a 2nd solution, the puzzle is NOT unique.
+# - Therefore stop-at-2 is the fastest correct uniqueness gate.
+#
+# Optional DIAGNOSTIC (not required for gating):
+# If you want to distinguish "exactly 2" vs "3+" solutions for analytics/tuning,
+# you can run a *cheap* second pass ONLY when the first pass returns solutionsFound>=2:
+#
+#   # Diagnostic pass (keep it cheap!)
+#   solutions3, stats3 = solve_count(
+#       puzzle,
+#       stop_at=3,
+#       time_limit_override_sec=2.0,      # small budget so CI stays fast
+#       verbose_override=False,
+#       progress_every_override=10**9
+#   )
+#
+# Then store it e.g. in:
+#   puzzle['_internal']['solverDiag'] = {
+#       'stopAt': 3,
+#       'solutionsFound': solutions3,
+#       'timedOut': stats3.get('timedOut'),
+#       'timeMs': stats3.get('timeMs')
+#   }
+#
+# NOTE: This diagnostic does NOT change uniqueness:
+# - 2 solutions already means non-unique.
+# - The diagnostic is only to measure how "non-unique" the puzzle is.
 # ------------------------------------------------------------
 
 
@@ -44,6 +73,7 @@ def neighbors(cell: Tuple[int, int], rows: int, cols: int) -> List[Tuple[int, in
 
 
 def make_simple_active_shape(difficulty: str, rows: int, cols: int) -> List[List[int]]:
+    """Deterministic domino-tileable shapes (dev stable)."""
     active: List[List[int]] = []
     if difficulty == "easy":
         for r in range(rows):
@@ -75,6 +105,7 @@ def make_blockers(rows: int, cols: int, active_cells: List[List[int]], rng: rand
 
 
 def bipartite_matching_tiling(active_cells: List[Tuple[int, int]]) -> List[Tuple[Tuple[int, int], Tuple[int, int]]]:
+    """Return one domino tiling as list of cell pairs using bipartite matching."""
     U = [cell for cell in active_cells if (cell[0] + cell[1]) % 2 == 0]
     V = [cell for cell in active_cells if (cell[0] + cell[1]) % 2 == 1]
 
@@ -114,6 +145,7 @@ def bipartite_matching_tiling(active_cells: List[Tuple[int, int]]) -> List[Tuple
 
 def partition_regions(active_cells: List[Tuple[int, int]], region_count: int, rows: int, cols: int,
                       rng: random.Random, min_size: int, max_size: int) -> List[List[List[int]]]:
+    """Simple contiguous-ish region growth with min/max sizing (best-effort)."""
     active_set = set(active_cells)
     seeds = rng.sample(active_cells, k=min(region_count, len(active_cells)))
     regions = [set([s]) for s in seeds]
@@ -161,6 +193,7 @@ def partition_regions(active_cells: List[Tuple[int, int]], region_count: int, ro
 
 
 def pick_animals_for_card(rng: random.Random, difficulty: str) -> Tuple[Optional[str], Optional[str]]:
+    """Return (a,b) where values are animal names or None (empty)."""
     empty_p = {"easy": 0.10, "medium": 0.06, "hard": 0.04}[difficulty]
     names = [a for a, _legs in ANIMALS]
 
@@ -184,6 +217,7 @@ def pick_animals_for_card(rng: random.Random, difficulty: str) -> Tuple[Optional
             return None
         return rng.choices(names, weights=weights, k=1)[0]
 
+    # avoid None/None
     for _ in range(8):
         a, b = sample_one(), sample_one()
         if not (a is None and b is None):
@@ -315,7 +349,13 @@ def generate_candidate(date_utc: str, difficulty: str, attempt: int) -> Dict[str
 
 
 def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
-    """FAST safe: bounded attempts, always progress logs."""
+    """DEV FAST SAFE
+
+    Uses the *usual* main call:
+      solve_count(..., stop_at=2)
+
+    See header comment for optional diagnostic stop_at=3 approach.
+    """
     spec = SPECS[difficulty]
 
     attempt_caps = {"easy": 120, "medium": 40, "hard": 60}
@@ -335,27 +375,32 @@ def generate_unique(date_utc: str, difficulty: str) -> Dict[str, Any]:
             print(f"[TRY] date={date_utc} diff={difficulty} attempt={attempt}/{max_attempts} timeouts={timeouts}", flush=True)
 
         puzzle = generate_candidate(date_utc, difficulty, attempt)
-        solutions, stats = solve_count(puzzle, stop_at=2)
 
-        if stats.get("timedOut"):
+        # MAIN CALL (Best practice): stop_at=2
+        solutions2, stats2 = solve_count(puzzle, stop_at=2)
+
+        if stats2.get("timedOut"):
             timeouts += 1
             if timeouts >= max_timeouts and best_solvable is not None:
                 print(f"[TRY] date={date_utc} diff={difficulty} too many timeouts -> fallback", flush=True)
                 break
 
-        if solutions <= 0:
+        if solutions2 <= 0:
             continue
 
-        score = compute_hardness(difficulty, spec.cards, stats)
+        score2 = compute_hardness(difficulty, spec.cards, stats2)
 
         if best_solvable is None:
-            best_solvable, best_stats, best_score = puzzle, stats, score
+            best_solvable, best_stats, best_score = puzzle, stats2, score2
 
-        if solutions == 1:
+        if solutions2 == 1:
             puzzle["_internal"]["uniqueSolution"] = True
-            puzzle["_internal"]["solverStats"] = stats
-            puzzle["_internal"]["difficultyScore"] = score
+            puzzle["_internal"]["solverStats"] = stats2
+            puzzle["_internal"]["difficultyScore"] = score2
             return puzzle
+
+        # Non-unique in FAST mode: keep looking for a unique one within caps
+        # (No diagnostic executed here; see header comment.)
 
     # fallback
     if best_solvable is None:
