@@ -1,10 +1,10 @@
 import argparse
 from datetime import datetime, timedelta, timezone
 
-from . import __version__ as GENERATOR_VERSION
-from .config import GIT_COMMIT
 from .generate_one_day import generate_unique, build_meta
 from .export_json import write_json, strip_internal
+from . import __version__ as GENERATOR_VERSION
+from .config import GIT_COMMIT
 
 
 def iso_date(d) -> str:
@@ -13,12 +13,12 @@ def iso_date(d) -> str:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--days", type=int, default=3)
+    ap.add_argument("--days", type=int, default=1)
     ap.add_argument("--timezone", default="UTC")
-    ap.add_argument("--verbose", action="store_true", help="Print progress logs")
+    # keep flag for compatibility, but logs are always on in this dev version
+    ap.add_argument("--verbose", action="store_true", help="(ignored) logs are always printed")
     args = ap.parse_args()
 
-    # Global daily: UTC date
     today = datetime.now(timezone.utc).date()
     available_through = today + timedelta(days=args.days - 1)
 
@@ -28,16 +28,13 @@ def main():
         d = today + timedelta(days=offset)
         date_utc = iso_date(d)
 
-        if args.verbose:
-            print(f"[GEN] date={date_utc} start", flush=True)
+        print(f"[GEN] date={date_utc} start", flush=True)
 
         puzzles = {}
         for diff in diffs:
-            if args.verbose:
-                print(f"[GEN] date={date_utc} diff={diff} ...", flush=True)
+            print(f"[GEN] date={date_utc} diff={diff} ...", flush=True)
             puzzles[diff] = generate_unique(date_utc, diff)
-            if args.verbose:
-                print(f"[GEN] date={date_utc} diff={diff} ✓", flush=True)
+            print(f"[GEN] date={date_utc} diff={diff} ✓", flush=True)
 
         meta = build_meta(date_utc, puzzles)
         base_dir = f"public/api/daily/{date_utc}"
@@ -46,8 +43,7 @@ def main():
         for diff in diffs:
             write_json(f"{base_dir}/{diff}.json", strip_internal(puzzles[diff]))
 
-        if args.verbose:
-            print(f"[GEN] date={date_utc} written", flush=True)
+        print(f"[GEN] date={date_utc} written", flush=True)
 
     today_str = iso_date(today)
     write_json("public/api/today.json", {
@@ -72,8 +68,7 @@ def main():
         "gitCommit": GIT_COMMIT
     })
 
-    if args.verbose:
-        print(f"[GEN] done. availableThroughUtc={iso_date(available_through)}", flush=True)
+    print(f"[GEN] done. availableThroughUtc={iso_date(available_through)}", flush=True)
 
 
 if __name__ == "__main__":
