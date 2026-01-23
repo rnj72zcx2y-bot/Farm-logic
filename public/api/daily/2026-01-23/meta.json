@@ -47,11 +47,11 @@
     "hard": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 6737.58,
+          "btPerCard": 5819.92,
           "maxDepth": 19,
           "mu": 0.85,
-          "nvPerCard": 8264.42,
-          "raw": 3.7004,
+          "nvPerCard": 7154.25,
+          "raw": 3.6466,
           "sigma": 0.25,
           "tPerCardMs": 625.0
         },
@@ -74,9 +74,9 @@
       "seed": "sha256:ebe5bca6af19b61b6e98e6a8dc067b3d36eb4a7b022a93412a8c1815a1e89db5",
       "solver": {
         "stats": {
-          "backtracks": 161702,
+          "backtracks": 139678,
           "maxDepth": 19,
-          "nodesVisited": 198346,
+          "nodesVisited": 171702,
           "solutionsFound": 2,
           "timeLimitSec": 15.0,
           "timeMs": 15000,
@@ -90,11 +90,11 @@
     "medium": {
       "difficultyScore": {
         "components": {
-          "btPerCard": 30604.53,
+          "btPerCard": 25430.8,
           "maxDepth": 14,
           "mu": 0.85,
-          "nvPerCard": 39716.0,
-          "raw": 4.2561,
+          "nvPerCard": 32925.13,
+          "raw": 4.1874,
           "sigma": 0.25,
           "tPerCardMs": 533.33
         },
@@ -117,9 +117,9 @@
       "seed": "sha256:8d08f23cf870cb47ae15ce082a97ca1cc2561536d80cb89dc3773a245613b5df",
       "solver": {
         "stats": {
-          "backtracks": 459068,
+          "backtracks": 381462,
           "maxDepth": 14,
-          "nodesVisited": 595740,
+          "nodesVisited": 493877,
           "solutionsFound": 2,
           "timeLimitSec": 8.0,
           "timeMs": 8000,
@@ -131,9 +131,9 @@
       "uniqueSolution": false
     }
   },
-  "generatedAtUtc": "2026-01-23T06:22:09Z",
+  "generatedAtUtc": "2026-01-23T06:30:05Z",
   "generatorVersion": "1.0.0",
-  "gitCommit": "1a190f7",
+  "gitCommit": "055ae1f",
   "notes": {
     "animals": [
       "Chicken",
